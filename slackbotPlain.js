@@ -13,7 +13,7 @@ var bot = new SlackBot({
 });
  
 bot.on('start', function() {    
-    notify(getCommands());
+    //notify(getCommands());
 });
 
 var commands = [
@@ -42,16 +42,22 @@ bot.on('message', function(data) {
         }
 
         // Find command in list and pull out argument
+        //TODO does not ensure there is space after command
         var command;
+        var argument;
         _.each(commands, function(commandStr) {
-            if(message.includes(commandStr))
+            if(message.includes(commandStr)) {
                 command = commandStr;
+                // +1 accounts for space after command
+                var argStart = message.toLowerCase().indexOf(command + " ") + command.length + 1;
+                argument = message.substr(argStart).toLowerCase().trim();
+            }
         });
-        var argument = message.replace(command,"").toLowerCase().trim();
 
         switch(command) {
 
             case 'list flags':
+            //TODO! dosen't work for channel case
                 if(!argument) {
                     LDAccess.getFlags(function(flagArray) {
                         var botReply = "Your feature flags:\n";
@@ -67,6 +73,10 @@ bot.on('message', function(data) {
 
             case 'create flag':
                 if(argument) {
+                    if(argument.split(" ").length > 1) {
+                        reply(data, "Your flag key cannot have spaces.");
+                        break;
+                    }
                     LDAccess.createFlag(argument, function(successful) {
                         var botReply = "Your flag ("+ argument +") was created!\n";
                         if(!successful) {
@@ -84,7 +94,7 @@ bot.on('message', function(data) {
                     LDAccess.deleteFlag(argument, function(successful) {
                         var botReply = "Your flag ("+ argument +") was deleted!\n";
                         if(!successful) {
-                            botReply = "Sorry, there was a problem deleting your flag.\n"
+                            botReply = "Sorry, there was a problem deleting your flag. Make sure the key provided exists.\n"
                         }
                         reply(data, botReply);
                     });
@@ -144,7 +154,7 @@ function getUser(userId)
 function getCommands() {
     var commandsMessage = "Here are your options. To see them again, type 'help'.\n\n";
     commandsMessage += "To see all of your flags, type \'list flags\'.\n"
-    commandsMessage += "To create a flag, type \'create flag <flag-name>\'.\n"
-    commandsMessage += "To delete a flag, type \'delete flag <flag-name>\'.\n"
+    commandsMessage += "To create a flag, type \'create flag <flag-key>\'.\n"
+    commandsMessage += "To delete a flag, type \'delete flag <flag-key>\'.\n"
     return commandsMessage;
 }

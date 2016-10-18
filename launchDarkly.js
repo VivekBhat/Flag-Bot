@@ -27,18 +27,19 @@ module.exports = {
 	    });
 	},
 
-	createFlag : function(flagName, callback) {
+	createFlag : function(flagKey, callback) {
 
 		var options = {
 			url: flagURL,
 			method: 'POST',
+			json: true,
 			headers: {
 			  "content-type": "application/json",
 			  "Authorization": LDAuth
 			},
 			body: {
-				"name": flagName,
-				"key": flagName.toLowerCase().replace(" ","-"),
+				"name": flagKey,
+				"key": flagKey,
 				"description": "A new feature!",
 				"variations": [
 					{
@@ -57,18 +58,19 @@ module.exports = {
 	    };
 
 	    request(options, function (error, response, body) 
-	    {;
-	        console.log(body);
+	    {
+	    	var sucessful = false;
+	    	if(body.name && body.creationDate)
+	    		sucessful = true;
+	        callback(sucessful);
 	    });
-
-		var sucessful = true;
-		callback(sucessful);
+		
 	},
 
 	deleteFlag : function(flagKey, callback) {
 
 		var options = {
-	      url: flagURL,
+	      url: flagURL + "/" + flagKey,
 	      method: 'DELETE',
 	      headers: {
 	          "content-type": "application/json",
@@ -76,17 +78,12 @@ module.exports = {
 	      }
 	    };
 
-	    // request(options, function (error, response, body) 
-	    // {;
-	    //     var flagNames = [];
-	    //     _.each(JSON.parse(body).items, function(item) {
-	    //     	flagNames.push(item.key);
-	    //     })
-	    //     callback(flagNames);
-	    // });
-
-		var sucessful = true;
-		callback(sucessful)
+	    request(options, function (error, response, body) {
+	    	var sucessful = false;
+	    	if(!error && response.statusCode >=200 && response.statusCode < 300)
+	    		sucessful = true;
+	        callback(sucessful);
+	    });
 	}
 
 }
