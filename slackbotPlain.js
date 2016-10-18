@@ -1,40 +1,98 @@
+var _ = require('underscore');
 var SlackBot = require('slackbots');
+var LDAccess = require("./launchDarkly");
+
 var notificationChannels = ["C2QHSD89J"];
 var sendAsUser = false;
 
 // create a bot 
 var bot = new SlackBot({
     // Add a bot https://my.slack.com/services/new/bot and put the token  
-    token: "", 
+    token: "xoxb-92608187490-1D8dc3X5vPjn6LPbjZucNEGx", 
     name: 'FlagLag Bot'
 });
  
-//TODO: change image
 bot.on('start', function() {    
     notify(getCommands());
 });
+
+var commands = [
+"list flags",
+"create flag",
+"delete flag"
+];
 
 bot.on('message', function(data) {
     // all ingoing events https://api.slack.com/rtm 
     // Check that it is a message type, not a bot, and the user is not the bot
     if( data.type == 'message' && data.user && getUser(data.user).name != bot.name )
     {
-        if(getChannel(data.channel) && !data.text.includes("<@" + bot.self.id + ">")) {
-            return;
+        var message = data.text;
+
+        // not a direct message so must mention bot
+        if(getChannel(data.channel)) { 
+            var botMention = "<@" + bot.self.id + ">";
+            //not talking to the bot
+            if (!message.includes(botMention)) { 
+                return;
+            } else {
+                // Strip out mention, left with command
+                message = message.replace(botMention,""); 
+            }
         }
 
-        var command = data.text.toLowerCase().trim();
-		
+        // Find command in list and pull out argument
+        var command;
+        _.each(commands, function(commandStr) {
+            if(message.includes(commandStr))
+                command = commandStr;
+        });
+        var argument = message.replace(command,"").toLowerCase().trim();
+
         switch(command) {
+
             case 'list flags':
-                reply(data, "Don't tell me what to do!");
+                if(!argument) {
+                    LDAccess.getFlags(function(flagArray) {
+                        var botReply = "Your feature flags:\n";
+                        _.each(flagArray,function(flag){
+                            botReply += flag + "\n";
+                        });
+                        reply(data, botReply);
+                    });
+                } else {
+                    reply(data, "Please do not provide an argument.");
+                }
                 break;
+
             case 'create flag':
-                reply(data, "Don't tell me what to do!");
+                if(argument) {
+                    LDAccess.createFlag(argument, function(successful) {
+                        var botReply = "Your flag ("+ argument +") was created!\n";
+                        if(!successful) {
+                            botReply = "Sorry, there was a problem creating your flag.\n"
+                        }
+                        reply(data, botReply);
+                    });
+                } else {
+                    reply(data, "Please provide an argument.");
+                }
                 break;
+
             case 'delete flag':
-                reply(data, "Don't tell me what to do!");
+                if(argument) {
+                    LDAccess.deleteFlag(argument, function(successful) {
+                        var botReply = "Your flag ("+ argument +") was deleted!\n";
+                        if(!successful) {
+                            botReply = "Sorry, there was a problem deleting your flag.\n"
+                        }
+                        reply(data, botReply);
+                    });
+                } else {
+                    reply(data, "Please provide an argument.");
+                }
                 break;
+
             default :
                 reply(data,getCommands());
         }
@@ -43,13 +101,13 @@ bot.on('message', function(data) {
 
 //Posts message to notificationChannels array defined at top
 function notify(msg) {
-    for(var i = 0; i < notificationChannels.length; i++) {
-        var channel = getChannel(notificationChannels[i]);
+    _.each(notificationChannels, function(channelId) {
+        var channel = getChannel(channelId);
         if( channel ) 
         {
             bot.postMessageToChannel(channel.name, msg, {as_user: sendAsUser});    
         }
-    }
+    });
 }
 
 function reply(data, msg)
@@ -83,15 +141,10 @@ function getUser(userId)
     })[0];
 }
 
-//Usage:
-    // more information about additional params https://api.slack.com/methods/chat.postMessage 
-    // var params = {
-    //     icon_emoji: ':cat:'
-    // };
-    // bot.getChannels().then(function(channels)
-    // {
-    //     console.log(JSON.stringify(channels, null, 3))
-    // });
 function getCommands() {
-    return "Here are your options.\n\nThat's right, none. Sorry.";
+    var commandsMessage = "Here are your options. To see them again, type 'help'.\n\n";
+    commandsMessage += "To see all of your flags, type \'list flags\'.\n"
+    commandsMessage += "To create a flag, type \'create flag <flag-name>\'.\n"
+    commandsMessage += "To delete a flag, type \'delete flag <flag-name>\'.\n"
+    return commandsMessage;
 }
