@@ -5,7 +5,8 @@ var fs = require('fs');
 var flagStateFileName = "flagState.json";
 
 getFlagState(function(data){
-	console.log(Data);
+	var flagState = console.log(data); //JSON.parse(string)
+	flagState.flagName = datetime; //now
 });
 
 //Lets define a port we want to listen to
