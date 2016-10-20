@@ -82,16 +82,25 @@ The code for mock requests/ response that our bot posts on the slack channel can
 
 **Bot Platform:** 
 
-*Our bot is fully operational within the <a href = "https://csc510-slackbot.slack.com/messages/featureflags/"> slack channel </a> we set up  
+* Our bot is fully operational within the <a href = "https://csc510-slackbot.slack.com/messages/featureflags/"> slack channel </a> we set up  
 
-*The bot relies on the <a href= "http://apidocs.launchdarkly.com/docs/webhooks-overview"> webhooks API </a> that launchDarkly provides. 
 
-*The webhooks is configured to a server. The server is actively listening for HTTP payloads and informing our bot about LaunchDarkly events that it cares about.
+* The bot relies on the <a href= "http://apidocs.launchdarkly.com/docs/webhooks-overview"> webhooks API </a> that launchDarkly provides. 
+
+
+* The webhooks is configured to a server. The server is actively listening for HTTP payloads and informing our bot about LaunchDarkly events that it cares about.
 
 **Bot Integration:**
-*Currently all the commands that the user can issue to the bot are available. Though they are not implemented, the mock data helps the bot provide an appropriate response. If there are issues in the syntax  - misspelled or missing parameters, the bot shows an error message and provides the directions again to the user on the slack channel
+* Currently all the commands that the user can issue to the bot are available. Though they are not implemented, the mock data helps the bot provide an appropriate response. If there are issues in the syntax  - misspelled or missing parameters, the bot shows an error message and provides the directions again to the user on the slack channel
 
 ### Selenium Testing (20%)
+
+* UC 1 - Path 1
+* UC 1 - Path 2
+* UC 2 - Path 1 `ListFeatureFlag.java` - wrong command with error message
+* UC 2 - Path 2 `ListFeatureFlag.java` - correct command and list of flags shown
+* UC 3 - Path 1 `CreateFeatureFlag.java` - correct command and new flag created
+* UC 3 - Path 2 `CreateFeatureFlag.java` - missing name of new flag, prompted again
 
 #### Task Tracking (15%)
 | Deliverable   | Item/Status   |  Issues/Tasks
