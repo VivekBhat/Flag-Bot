@@ -1,6 +1,7 @@
 //Lets require/import the HTTP module
 var http = require('http');
 var fs = require('fs');
+//var slackbot = require('../slack/slackbot');
 
 var flagStateFileName = "flagStates.json";
 var flagStateJSON;
@@ -108,6 +109,13 @@ function saveFlagStates(flagState) {
 }
 
 
+function mockNotification() {
+    console.log("A timeout has occured");
+}
+
+setInterval(mockNotification, 10000);
+
+/*
 // Lets loaded our saved flag data
 getFlagStates(function(data){
     if(data != "") {
@@ -126,4 +134,4 @@ var server = http.createServer(handleRequest);
 server.listen(PORT, function(){
     //Callback triggered when server is successfully listening. Hurray!
     console.log("Server listening on: http://localhost:%s", PORT);
-});
+});*/
