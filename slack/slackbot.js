@@ -6,6 +6,29 @@ var Parser = require("../parser/parser");
 var notificationChannels = ["C2QHSD89J"];
 var sendAsUser = false;
 
+//TESTING!
+/**************************************************************************/ 
+var testing = true;
+if(testing) {
+    var nock = require('nock');
+    var fs = require('fs');
+    var mockData = JSON.parse(fs.readFileSync('../common/mockdata.json', 'utf8'));
+
+    //MOCK SERVICES
+    var listFlags = nock("https://app.launchdarkly.com").persist()
+    .get("/api/v2/flags/default")
+    .reply(200, JSON.stringify(mockData.listFlags) );
+
+    var createFlag = nock("https://app.launchdarkly.com").persist()
+    .post("/api/v2/flags/default")
+    .reply(200, JSON.stringify(mockData.createFlag) );
+
+    var deleteFlag = nock("https://app.launchdarkly.com").persist()
+    .delete("/api/v2/flags/default")
+    .reply(200, JSON.stringify(mockData.deleteFlag) );
+}
+/**************************************************************************/ 
+
 // create a bot 
 var bot = new SlackBot({
     // Add a bot https://my.slack.com/services/new/bot and put the token  
@@ -48,6 +71,7 @@ bot.on('message', function(data) {
     {
         var message = data.text;
 
+        // TODO: bot not working in the channel.
         // not a direct message so must mention bot
         if(getChannel(data.channel)) { 
             var botMention = "<@" + bot.self.id + ">";
@@ -68,27 +92,28 @@ bot.on('message', function(data) {
             if(message.includes(commandStr)) {
                 command = commandStr;
                 // +1 accounts for space after command
-                //space after command not working yet 
-                var argStart = message.toLowerCase().indexOf(command + " ") + command.length + 1;
-                argument = message.substr(argStart).toLowerCase().trim();
+                var commandStart = message.toLowerCase().indexOf(command + " ");
+                if(commandStart != -1) {
+                    var argStart =  commandStart + command.length + 1;
+                    argument = message.substr(argStart).toLowerCase().trim();
+                }
             }
         });
 
         switch(command) {
 
             case 'list flags':
-            //TODO! dosen't work for channel case
-                if(!argument) {
-                    LDAccess.getFlags(function(flagArray) {
+                LDAccess.getFlags(function(flagArray) {
+                    if(flagArray.length == 0) {
+                        reply(data, "No flags were found.")
+                    } else {
                         var botReply = "Your feature flags:\n";
                         _.each(flagArray,function(flag){
                             botReply += flag + "\n";
                         });
                         reply(data, botReply);
-                    });
-                } else {
-                    reply(data, "Please do not provide an argument.");
-                }
+                    }
+                });
                 break;
 
             case 'create flag':
