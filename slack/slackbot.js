@@ -123,8 +123,10 @@ bot.on('message', function(data) {
                         break;
                     }
                     LDAccess.createFlag(argument, function(successful) {
+                         //console.log("attempt made? \n")
                         var botReply = "Your flag ("+ argument +") was created!\n";
                         if(!successful) {
+                            //console.log("Got up to here \n");
                             botReply = "Sorry, there was a problem creating your flag.\n"
                         }
                         reply(data, botReply);

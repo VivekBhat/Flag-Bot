@@ -203,11 +203,22 @@
 	  }
 	},
 
-	"createFlag" : {
-	   "name":"New test flag",
-	   "key":"new-test-flag",
-	   "on":true
-	}
-
+"createFlag" : {
+  	"name": "New test flag",
+  	"key": "new-test-flag",
+  	"description": "A new feature!",
+		"variations": [
+			{
+			  "value": true,
+			  "name": "True",
+			  "description": "The true variation"
+			},
+			{
+			  "value": false,
+			  "name": "False",
+			  "description": "The false variation"
+			}
+		]
+}
 
 }
