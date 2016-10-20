@@ -12,7 +12,7 @@ var testing = true;
 if(testing) {
     var nock = require('nock');
     var fs = require('fs');
-    var mockData = JSON.parse(fs.readFileSync('../common/mockdata.json', 'utf8'));
+    var mockData = JSON.parse(fs.readFileSync(__dirname + '/../common/mockdata.json', 'utf8'));
 
     //MOCK SERVICES
     var listFlags = nock("https://app.launchdarkly.com").persist()
@@ -21,9 +21,12 @@ if(testing) {
 
     var createFlag = nock("https://app.launchdarkly.com").persist()
     .post("/api/v2/flags/default")
-    .reply(200, JSON.stringify(mockData.createFlag) );
+    .reply(201, JSON.stringify(mockData.createFlag) );
 
     var deleteFlag = nock("https://app.launchdarkly.com").persist()
+    .filteringPath(function(path) {
+       return "/api/v2/flags/default";
+     })
     .delete("/api/v2/flags/default")
     .reply(200, JSON.stringify(mockData.deleteFlag) );
 }

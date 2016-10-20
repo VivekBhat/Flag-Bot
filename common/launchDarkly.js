@@ -58,10 +58,10 @@ module.exports = {
 
 	    request(options, function (error, response, body) 
 	    {
-	    	var sucessful = false;
-	    	if(body.name && body.creationDate)
-	    		sucessful = true;
-	        callback(sucessful);
+	    	var successful = false;
+	    	if(response.statusCode == 201 && body.key)
+	    		successful = true;
+	        callback(successful);
 	    });
 		
 	},
