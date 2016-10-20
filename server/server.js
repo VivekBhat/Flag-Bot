@@ -2,63 +2,122 @@
 var http = require('http');
 var fs = require('fs');
 
-var flagStateFileName = "flagState.json";
+var flagStateFileName = "flagStates.json";
+var flagStateJSON;
 
-getFlagState(function(data){
-	var flagState = console.log(data); //JSON.parse(string)
-	flagState.flagName = datetime; //now
-});
-
-//Lets define a port we want to listen to
+/* This is the port # that the server will be listening for request on */
 const PORT=40676; 
 
-//We need a function which handles requests and send response
+/* This function handles when a post or get request is made to the node server */
 function handleRequest(request, response){
-		console.dir(request.param);
+        console.dir(request.param);
 
-		// kind : flag
-		// titleVerb : turned on
-		// action : updateOn
+        // kind : flag
+        // titleVerb : turned on
+        // action : updateOn
     if (request.method == 'POST') {
-		
+        
         console.log("POST");
         var body = '';
         request.on('data', function (data) {
             body += data;
-            console.log("Partial body: " + body);
+            //console.log("Partial body: " + body);
+            /*fs.writeFile("Partial_body.json", data, (err) => {
+                if(err) console.log("Error writing partial body");
+                else console.log("Partial body writing succesful");
+            });*/
         });
         request.on('end', function () {
-            console.log("Body: " + body);
+            //console.log("Body: " + body);
+            fs.writeFile("body.json", body, (err) => {
+                if(err) console.log("Error writing body");
+                else console.log("Body writing succesful");
+            })
+
+            handlePost(body);            
         });
+
         response.writeHead(200, {'Content-Type': 'text/html'});
         response.end('post received');
     }
     else
     {
         console.log("GET");
-        var html = '<html><body><form method="post" action="http://cutegirls.servebeer.com:40676">Name: <input type="text" name="name" /><input type="submit" value="Submit" /></form></body>';
+        //var html = '<html><body><form method="post" action="http://cutegirls.servebeer.com:40676">Name: <input type="text" name="name" /><input type="submit" value="Submit" /></form></body>';
+        var html = '<html><body><h1>This server does not accept GET requests besides this.</h1></body>';
         //var html = fs.readFileSync('index.html');
         response.writeHead(200, {'Content-Type': 'text/html'});
         response.end(html);
     }
 }
 
-function getFlagState(callback) {
-	return fs.readFile(flagStateFileName, 'utf8', (err, data) => {
-		if(err) {
-			console.log("Error: " + err.stack);
-		}
-		console.log("File: " + data);
-		callback(data);
-	});
+/* This function handles when a POST is made to the server */
+function handlePost(postJSON) {
+    var post = JSON.parse(postJSON);
+
+    if(post.kind === 'flag') {
+        var flagName = post.name;
+        var flagDate = post.date;
+        var flagVerb = post.titleVerb;
+
+        //console.log("flag: " + flagName + " " + flagDate + " " + flagVerb);
+        var flagIndex = doesFlagExist(flagName);
+        if(flagIndex >= 0) {
+            flagStateJSON[flagIndex].date = flagDate;
+            flagStateJSON[flagIndex].verb = flagVerb;
+        } else {
+            //var newFlagJson = {"name":flagName, "date":flagDate, "verb":flagVerb};
+            //var newFlagJson = {"name":flagName, "date":flagDate, "verb:flagVerb};
+            flagStateJSON.push(newFlagJson);
+        }
+
+        saveFlagStates(JSON.stringify(flagStateJSON));
+    } else {
+        console.log("Post was not feature flag related");
+    }
 }
 
-function saveFlagState(flagState) {
-	fs.writeFile(flagStateFileName, flagState, (err) => {
-	  if (err) throw err;
-	  console.log('It\'s saved!');
-	});
+/* This checks to see if the flagName provided exists in the saved flag file
+    The index is returned if true, else -1;
+*/
+function doesFlagExist(flagName) {
+    for(i=0; i < flagStateJSON.length; i++){
+        if(flagStateJSON[i].name == flagName) {
+            return i;
+        }
+    }
+    return -1;
 }
+
+/* Gets the flags and their states from the saved file */
+function getFlagStates(callback) {    
+    return fs.readFile(flagStateFileName, 'utf8', (err, data) => {
+        if(err) {
+            console.log("Error: " + err.stack);
+        }
+        callback(data);
+    });
+}
+
+/* Saves the flag states */
+function saveFlagStates(flagState) {
+    fs.writeFile(flagStateFileName, flagState, (err) => {
+      if (err) throw err;
+      console.log('Flag stats saved.');
+    });
+}
+
+
+// Lets loaded our saved flag data
+getFlagStates(function(data){
+    if(data != "") {
+        flagStateJSON = JSON.parse(data);
+        console.log("Flag states file loaded.");         
+    } else {
+        flagStateJSON = new Array();
+        console.log("Flag stats file was empty.");
+    }
+});
 
 //Create a server
 var server = http.createServer(handleRequest);
