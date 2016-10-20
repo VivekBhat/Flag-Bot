@@ -5,23 +5,26 @@
 **Note:** We have a total of 8 use cases for FlaglagBot. All the use cases are documented in the github issue tracker. We have outlined 3 uses cases here.
 
 ~~~~
-UC1: Response to Launch Darkly Delete Event on Feature Flag
+UC1: Response to LaunchDarkly Delete Event on Feature Flag
 ============================================================
 1 Preconditions: 
 -----------------
-  Configure a server to listen to LaunchDarkly events using the webhooks API.
+  Ther server is listening for LaunchDarkly webhooks POSTs about feature flag events.
+  
 2 Main Flow: 
 --------------
-  When a feature flag is deleted in the Launch Darkly dashboard [S1] the bot alerts the user about it [S2]
+  When a feature flag is deleted in the LaunchDarkly dashboard [S1] the bot alerts the user [S2]
   and prompts for an action [S3]. 
   The user requested action is completed [S4]
+  
 3 Subflows:
 ------------
-  [S1] The server receives an HTTP POST payload with information about a feature flag being deleted.
-  [S2] Bot will alert the user by sending a message on the slack channel to the user with the delete flag name.
+  [S1] The server receives an HTTP POST payload with information about the feature flag deletion.
+  [S2] Bot will alert the user by sending a message to the slack channel about the flag deletion.
   [S3] Bot will present the user with 2 options (1) Integrate feature (2) Discard feature.
-      [S3.1] Bot will make changes in the code base and push it to git if option (1) or (2) selected
+      [S3.1] Bot will make changes in the code base and push it to git if option (1) or (2) selected.
   [S4] Bot will display a message about the action that was performed [E1][E2].
+  
 4 Alternate Flows:
 -------------------
   [E1] Requested action is completed, bot responds with a success message.
@@ -34,18 +37,21 @@ UC2: View/List Feature Flags
 ==============================
 1 Preconditions:
 -----------------
-  User has the bot slack channel open and a default environment is defined in the configuration file.
+  User has the bot slack channel open.
+  
 2 Main Flow:
 -------------
-  The user can request the bot to show all the feature flags in the code [S1].
+  The user can request the bot to show all the LaunchDarkly feature flags [S1].
+  
 3 Subflows:
 ------------
-  [S1] User requests the bot to list all flags with the command: “list flags” [E1]
-  [S2] Bot will respond with a list of all the feature flags in the code base in the default environment [E2].
+  [S1] User requests the bot to list all flags with the command: “list flags” [E1].
+  [S2] Bot will respond with a list of all the feature flags in all environments [E2].
+  
 4 Alternate Flows:
 -------------------
-  [E1] User misspells the command and the bot will provide a list of all commands and the syntax
-  [E2] No feature flags were found
+  [E1] User misspells the command and the bot will provide a list of all commands and the syntax.
+  [E2] No feature flags were found, and the bot tells the user this.
   ~~~~
 
 ~~~~
@@ -53,15 +59,18 @@ UC3: Create Feature Flag
 ==========================
 1 Preconditions:
 ------------------
-  User has the bot slack channel open and a default environment is defined in the configuration file.
+  User has the bot slack channel open.
+  
 2 Main Flow:
 -------------
 The user can request the bot to create a new feature flag [S1].
+
 3 Subflows:
 ------------
   [S1] User will send a request in the format: “create flag <flag-key>”,
-  where the <flag-key> is the name of the new flag [E1] 
-  [S2] Bot will send a success message when flag is created
+  where the <flag-key> is the name of the new flag [E1]. 
+  [S2] Bot will send a success message when flag is created.
+  
 4 Alternate Flows:
 -------------------
   [E1] The user input/ command had errors – misspelled keyword or missing parameters. 
