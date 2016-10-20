@@ -84,6 +84,18 @@ module.exports = {
 	    		sucessful = true;
 	        callback(sucessful);
 	    });
+	},
+
+	/***************************************************************************/
+	/* Still need to implement the rest!
+	/***************************************************************************/
+
+	turnOnFlag : function(flagKey, callback) {
+		// TODO
+	},
+
+	turnOffFlag : function(flagKey, callback) {
+		// TODO
 	}
 
 }
