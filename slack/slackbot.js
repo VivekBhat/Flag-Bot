@@ -244,3 +244,7 @@ function getUser(userId)
         return item.id === userId;
     })[0];
 }
+
+module.exports = {
+    notify : notify
+}

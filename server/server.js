@@ -1,7 +1,7 @@
 //Lets require/import the HTTP module
 var http = require('http');
 var fs = require('fs');
-//var slackbot = require('../slack/slackbot');
+var slackbot = require('../slack/slackbot');
 
 var flagStateFileName = "flagStates.json";
 var flagStateJSON;
@@ -24,7 +24,7 @@ function handleRequest(request, response){
             body += data;
             //console.log("Partial body: " + body);
             /*fs.writeFile("Partial_body.json", data, (err) => {
-                if(err) console.log("Error writing partial body");
+                if(err) console.log("Error wr <asdfioiting partial body");
                 else console.log("Partial body writing succesful");
             });*/
         });
@@ -110,7 +110,7 @@ function saveFlagStates(flagState) {
 
 
 function mockNotification() {
-    console.log("A timeout has occured");
+    slackbot.notify("MOCK: A feature flag has been deleted. What would you like to do? (Need button options for either integrating or discarding feature)");
 }
 
 setInterval(mockNotification, 10000);
