@@ -79,16 +79,27 @@ We used the <a href="https://github.com/node-nock/nock/blob/master/README.md">no
 The code for mock requests/ response that our bot posts on the slack channel can be found in `slackbot.js` 
 
 ### Bot Implementation (30%)
-** Bot Platform:** 
-Our bot is fully operational within the <a href = "https://csc510-slackbot.slack.com/messages/featureflags/"> slack channel </a> we set up 
-The bot relies on the <a href= "http://apidocs.launchdarkly.com/docs/webhooks-overview"> webhooks API </a> that launchDarkly provides.
-The webhooks is configured to a server. The server is actively listening for HTTP payloads and informing our bot about LaunchDarkly events that it cares about.
 
-** Bot Integration:**
-Implement basic conversation/interaction with bot. You need to support the ability to fully have a conversation with an bot as defined by your use cases.
+**Bot Platform:** 
+
+*Our bot is fully operational within the <a href = "https://csc510-slackbot.slack.com/messages/featureflags/"> slack channel </a> we set up  
+
+*The bot relies on the <a href= "http://apidocs.launchdarkly.com/docs/webhooks-overview"> webhooks API </a> that launchDarkly provides. 
+
+*The webhooks is configured to a server. The server is actively listening for HTTP payloads and informing our bot about LaunchDarkly events that it cares about.
+
+**Bot Integration:**
+*Currently all the commands that the user can issue to the bot are available. Though they are not implemented, the mock data helps the bot provide an appropriate response. If there are issues in the syntax  - misspelled or missing parameters, the bot shows an error message and provides the directions again to the user on the slack channel
 
 ### Selenium Testing (20%)
 
 #### Task Tracking (15%)
-
+| Deliverable   | Item/Status   |  Issues/Tasks
+| ------------- | ------------  |  ------------
+| Use Case      | Get Meeting Availability          | &nbsp;
+| Subflow      | 1             |  #33, #38, #78
+| Subflow      | 2             |  [Pivotal Task](https://www.pivotaltracker.com/story/show/114636091)
+| Subflow      | 3             |  [Trello Card](https://trello.com/c/diA1DaMw)
+| Subflow      | &nbsp;        | &nbsp;
+| Selenium Tests| Incomplete    | Get Meeting
 #### Screencast (5%)
