@@ -93,9 +93,7 @@ The code for mock requests/ response that our bot posts on the slack channel can
 
 * Our bot is fully operational within the <a href = "https://csc510-slackbot.slack.com/messages/featureflags/"> slack channel </a> we set up.  
 
-
 * The bot relies on the <a href= "http://apidocs.launchdarkly.com/docs/webhooks-overview"> webhooks API </a> that launchDarkly provides. 
-
 
 * The server is actively listening for HTTP POSTs from LaunchDarkly about events that it cares about.
 
@@ -104,8 +102,8 @@ The code for mock requests/ response that our bot posts on the slack channel can
 
 ### Selenium Testing (20%)
 
-* UC 1 - Path 1
-* UC 1 - Path 2
+* UC 1 - Path 1 `LaunchDarklyDelete.java` - integrate button selected for deleted flag
+* UC 1 - Path 2 `LaunchDarklyDelete.java` - discard button selected for deleted flag
 * UC 2 - Path 1 `ListFeatureFlag.java` - wrong command with error message
 * UC 2 - Path 2 `ListFeatureFlag.java` - correct command and list of flags shown
 * UC 3 - Path 1 `CreateFeatureFlag.java` - correct command and new flag created
@@ -116,3 +114,9 @@ The code for mock requests/ response that our bot posts on the slack channel can
 Please see [WORKSHEET.md](https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/WORKSHEET.md) for task tracking information.
 
 #### Screencast (5%)
+**Introduction Screencast - Preview**
+![Introduction Screencast for overview] (https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/screencast.gif)
+
+
+**Screencast - remaining commands**
+![Other Nock Listeners for rest of the commands] (https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/screencast2.gif)
