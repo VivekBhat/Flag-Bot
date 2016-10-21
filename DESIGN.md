@@ -1,4 +1,8 @@
-#Design Milestone - FlagLag Bot
+#Design Milestone - FlagLag Bot 
+~~~~
+(Modified based on Feedback from milestone # 1)
+~~~~
+
 
 ###SoftWereWolves - Nikhila Balaji, Vivek Bhat, Katie Brey, Seth Butler, James Guo
 
@@ -22,9 +26,30 @@ FlagLag Bot will allow you to better maintain the feature flag code in your code
 
 The bot will be able to remove the flag from the code, leaving the feature permanently. This is useful if a feature has been tested thoroughly and it is time to move the feature into mainline code. Alternatively, the bot can remove a feature from the code and leave the old code that was used before the feature. This would be useful if a feature is no longer wanted and should be scrapped. Users can carry out these actions at any time by giving the command to the Slackbot. 
 
+
+**Explanation** 
+~~~~
+In order to interact and make changes with the code base, we will be writing a parser. 
+The parser will parse through the json code files and look for information that must be 
+removed/ and or merged with the rest of the code. We are using Esprima, 
+which will build an AST tree for a given file, in order to build this parser.
+~~~~
+ <a hef="https://www.npmjs.com/package/esprima-ast-utils">Esprima </a>
+
 Certain events also prompt the user to carry out these actions. If a feature flag is deleted in Launch Darkly, the user is given the choice to make the feature permanent, or scrap the feature. If a feature flag has been on for a long time (user-specified setting), the user will be reminded and given the option to make the feature permanent.
 
  ![Logic Flow](https://github.ncsu.edu/vbhat/MILESTONE-DESIGN/blob/master/Resources/BotDescription.png "Logic Flow")
+ 
+ 
+ **Explanation**
+ ~~~~
+ In addition to 5 specific flows demonstrated above,  our bot will also support a user
+ to complete actions that LaunchDarkly Dashboard supports directly from the slack channel:
+ * turn on/off a feature flag
+ * delete a feature flag
+ * create a feature flag
+ * list all feature flags
+ ~~~~
 
 All of the code manipulation would be driven by the language-specific syntax for the Launch Darkly connection code.  The bot will support a subset of SDKs from the list of SDKs LaunchDarkly supports (see below). We know we will be supporting the Node.js SDK, and will decide which additional ones when developing our bot.
 
