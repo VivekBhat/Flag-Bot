@@ -15,6 +15,7 @@ module.exports = {
 	deleteFeatureFlag : function(featureKey, discardFeature) {
 		
 		return new Promise ( function(resolve, reject) { 
+			resolve();
 			// Promise doc: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
 			// Logic Flow:
 			// Remove feature flag code

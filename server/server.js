@@ -113,7 +113,7 @@ function mockNotification() {
     slackbot.notify("MOCK: A feature flag has been deleted. What would you like to do? (Need button options for either integrating or discarding feature)");
 }
 
-setInterval(mockNotification, 10000);
+setInterval(mockNotification, 20000);
 
 /*
 // Lets loaded our saved flag data
