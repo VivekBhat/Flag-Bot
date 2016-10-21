@@ -91,14 +91,16 @@ The code for mock requests/ response that our bot posts on the slack channel can
 
 **Bot Platform:** 
 
-* Our bot is fully operational within the <a href = "https://csc510-slackbot.slack.com/messages/featureflags/"> slack channel </a> we set up.  
+* Our bot is fully operational within the <a href = "https://csc510-slackbot.slack.com/messages/featureflags/"> slack channel </a> we set up. See the screen casts below for a demonstration.
 
-* The bot relies on the <a href= "http://apidocs.launchdarkly.com/docs/webhooks-overview"> webhooks API </a> that launchDarkly provides. 
+* The bot relies on the <a href= "http://apidocs.launchdarkly.com/docs/webhooks-overview"> webhooks API </a> that launchDarkly provides in order to listen for feature flag changes. Currently, we have a NodeJS server set up on a raspberry pi which is listening for LaunchDarkly POSTs. We have mocked the notifications from server to slackbot with a timer.
 
-* The server is actively listening for HTTP POSTs from LaunchDarkly about events that it cares about.
+* The bot uses the LaunchDarkly REST API to get and change information about feature flags. All of the requests have been implemented. We are using mock data to mimick the responses for this assignment.
+
+* Next we will be working on the Parser to remove Launch Darkly feature flag code from the user's git repo.
 
 **Bot Integration:**
-* Currently all the commands that the user can issue to the bot are available. As some are not implemented, the mock data helps the bot provide an appropriate response. If there are issues in the syntax  - misspelled or missing parameters, the bot shows an error message and provides the directions again to the user on the slack channel.
+* Currently all the commands that the user can issue to the bot are available. The mock data helps the bot provide an appropriate response. If there are issues in the syntax  - misspelled or missing parameters, the bot shows an error message and provides the directions again to the user on the slack channel.
 
 ### Selenium Testing (20%)
 
