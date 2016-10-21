@@ -3,7 +3,7 @@ var SlackBot = require('slackbots');
 var LDAccess = require("../common/launchDarkly");
 var Parser = require("../parser/parser");
 
-var notificationChannels = ["C2QHSD89J"];
+var notificationChannels = ["C2QHSD89J", "C2SA5Q458"];
 var sendAsUser = false;
 
 //TESTING!
@@ -29,6 +29,13 @@ if(testing) {
      })
     .delete("/api/v2/flags/default")
     .reply(200, JSON.stringify(mockData.deleteFlag) );
+
+    var turnOnOffFlag = nock("https://app.launchdarkly.com").persist()
+    .filteringPath(function(path) {
+       return "/api/v2/flags/default";
+     })
+    .patch("/api/v2/flags/default")
+    .reply(200);
 }
 /**************************************************************************/ 
 
