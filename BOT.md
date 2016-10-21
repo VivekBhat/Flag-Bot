@@ -102,8 +102,8 @@ The code for mock requests/ response that our bot posts on the slack channel can
 
 ### Selenium Testing (20%)
 
-* UC 1 - Path 1 `LaunchDarklyDelete.java` - integrate button selected for deleted flag
-* UC 1 - Path 2 `LaunchDarklyDelete.java` - discard button selected for deleted flag
+* UC 1 - Path 1 `LaunchDarklyDelete.java` - integrate button (coming up) selected for deleted flag
+* UC 1 - Path 2 `LaunchDarklyDelete.java` - discard button (coming up) selected for deleted flag
 * UC 2 - Path 1 `ListFeatureFlag.java` - wrong command with error message
 * UC 2 - Path 2 `ListFeatureFlag.java` - correct command and list of flags shown
 * UC 3 - Path 1 `CreateFeatureFlag.java` - correct command and new flag created
