@@ -80,7 +80,7 @@ The user can request the bot to create a new feature flag [S1].
 ### Mocking (20%)
 **Goal:**  mock services and data to support service integration
 
-Our slackbot bot relies on <a href= "http://apidocs.launchdarkly.com/docs/feature-flags-overview"> LaunchDarkly REST API </a> calls for requesting and posting information. 
+Our slackbot bot relies on <a href= "http://apidocs.launchdarkly.com/docs/feature-flags-overview"> LaunchDarkly REST API </a> calls for requesting and manipulating feature flags. 
 We have the mock data for LaunchDarkly request/responses in mockdata.json file `[path: FlagLagBot/common/mockdata.json]`
 
 
@@ -91,16 +91,16 @@ The code for mock requests/ response that our bot posts on the slack channel can
 
 **Bot Platform:** 
 
-* Our bot is fully operational within the <a href = "https://csc510-slackbot.slack.com/messages/featureflags/"> slack channel </a> we set up  
+* Our bot is fully operational within the <a href = "https://csc510-slackbot.slack.com/messages/featureflags/"> slack channel </a> we set up.  
 
 
 * The bot relies on the <a href= "http://apidocs.launchdarkly.com/docs/webhooks-overview"> webhooks API </a> that launchDarkly provides. 
 
 
-* The webhooks is configured to a server. The server is actively listening for HTTP payloads and informing our bot about LaunchDarkly events that it cares about.
+* The server is actively listening for HTTP POSTs from LaunchDarkly about events that it cares about.
 
 **Bot Integration:**
-* Currently all the commands that the user can issue to the bot are available. Though they are not implemented, the mock data helps the bot provide an appropriate response. If there are issues in the syntax  - misspelled or missing parameters, the bot shows an error message and provides the directions again to the user on the slack channel
+* Currently all the commands that the user can issue to the bot are available. As some are not implemented, the mock data helps the bot provide an appropriate response. If there are issues in the syntax  - misspelled or missing parameters, the bot shows an error message and provides the directions again to the user on the slack channel.
 
 ### Selenium Testing (20%)
 
@@ -112,12 +112,7 @@ The code for mock requests/ response that our bot posts on the slack channel can
 * UC 3 - Path 2 `CreateFeatureFlag.java` - missing name of new flag, prompted again
 
 #### Task Tracking (15%)
-| Deliverable   | Item/Status   |  Issues/Tasks
-| ------------- | ------------  |  ------------
-| Use Case      | Get Meeting Availability          | &nbsp;
-| Subflow      | 1             |  #33, #38, #78
-| Subflow      | 2             |  [Pivotal Task](https://www.pivotaltracker.com/story/show/114636091)
-| Subflow      | 3             |  [Trello Card](https://trello.com/c/diA1DaMw)
-| Subflow      | &nbsp;        | &nbsp;
-| Selenium Tests| Incomplete    | Get Meeting
+
+Please see [WORKSHEET.md](https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/WORKSHEET.md) for task tracking information.
+
 #### Screencast (5%)
