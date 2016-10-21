@@ -1,3 +1,5 @@
+**Note:** See [issues](https://github.ncsu.edu/kebrey/FlagLagBot/issues) for use cases.
+
 ##### Week 1 (Ends 10/20)
 
 | Deliverable   | Item/Status   |  Issues/Tasks
