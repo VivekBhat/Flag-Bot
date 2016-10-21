@@ -85,16 +85,68 @@ module.exports = {
 	    });
 	},
 
-	/***************************************************************************/
-	/* Still need to implement the rest!
-	/***************************************************************************/
-
+	    
 	turnOnFlag : function(flagKey, callback) {
-		// TODO
-	},
-
+        
+        var options = {
+			url: flagURL + "/" + flagKey,
+			method: 'PATCH',
+			headers: {
+			  "content-type": "application/json",
+			  "Authorization": LDAuth
+			},
+			json: [
+                    { 
+                        "op": "replace", 
+                        "path" : "/environments/production/on",
+                        "value": true 
+                    },
+                    { 
+                        "op": "replace", 
+                        "path" : "/environments/test/on",
+                        "value": true 
+                    }
+                  ]		      
+	    };
+        
+        request(options, function (error, response, body) {
+	         var successful = false;
+	    	 if(response.statusCode == 200 )
+	    		successful = true;
+	         callback(successful);
+	    });   
+    },        
+  
+    
 	turnOffFlag : function(flagKey, callback) {
-		// TODO
+    
+        var options = {
+			url: flagURL + "/" + flagKey,
+			method: 'PATCH',
+			headers: {
+			  "content-type": "application/json",
+			  "Authorization": LDAuth
+			},
+			json: [
+                    { 
+                        "op": "replace", 
+                        "path" : "/environments/production/on",
+                        "value": false 
+                    },
+                    { 
+                        "op": "replace", 
+                        "path" : "/environments/test/on",
+                        "value": false 
+                    }
+                  ]		      
+	    };
+        
+        request(options, function (error, response, body) {
+	         var successful = false;
+	    	 if(response.statusCode == 200 )
+	    		successful = true;
+	         callback(successful);
+	    });   
 	}
 
 }
