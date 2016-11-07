@@ -37,10 +37,14 @@ module.exports = {
 
 function parseCode(fileName, featureKey, discardFeature) {
 	var AST = Parser.parseFile(fileName); 
+	var libraryVarName = getLibraryVarName(AST);
+	var clientVarName = getClientVarName(AST, libraryVarName);
 
 	var featureCodeLeft = false; //Other feature flags are still here (used for removing library code
-	_.each(getClientOnceNodes(AST), function(onceNode) {
-		_.each(getClientVariationNodes(onceNode), function(variationNode) {
+	_.each(getClientOnceContent(AST, clientVarName), function(onceNode) {
+		console.log("Once node found");
+		_.each(getClientVariationNodes(onceNode, clientVarName), function(variationNode) {
+			console.log("Variation node found");
 			var featureName = getVariationFlagName(variationNode);
 			if(featureName == featureKey) {
 				removeFlagCode(variationNode);
@@ -53,7 +57,6 @@ function parseCode(fileName, featureKey, discardFeature) {
 		deleteLDCode();
 	}
 
-	Parser.traverse(AST, getLibraryName);
 	var wstream = fs.createWriteStream('testModified.js');
 	wstream.write(Parser.getCode(AST));
 	wstream.end();
@@ -67,53 +70,88 @@ function findFilesWithFlag() {
 
 // Function passed to parser that deleted LD library call code.
 // Should only be used if there are is no LD code left! (not always deleted)
-function getLibraryName(node) {
-	if(node.type == 'Literal' && node.value == launchDarklyLibrary) {
+function getLibraryVarName(AST) {
+	libraryVarName = null;
+	Parser.traverse(AST, function(node){
+		if(node.type == 'Literal' && node.value == launchDarklyLibrary) {
 		//now try to get the variable name of the library call
 		console.log("Found library call.");
 		var libraryVariable = Parser.getParent(node, function(upperNode){
 			return upperNode.type == "identifier";
 		});
-		console.log(JSON.stringify(libraryVariable));
+		//libraryVarName = libraryVariable.name;
 	}
+	});
+	libraryVarName = "LaunchDarkly"; //TODO: remove when works
+	return libraryVarName;
 }
 
-function findClientVarible() {
+function getClientVarName(AST, libraryVarName) {
 	//uses find library name
+	return "client";//TODO
 }
 
 // Gets outer most layer of feature flag code (client.once)
-function getClientOnceNodes(node) {
+function getClientOnceContent(node, clientVarName) {
 	var onceNodes = [];
  	Parser.traverse(node, function(subNode) {
- 		if(subNode.type == "IDK") { //TODO
- 			onceNodes.push(subNode);
+ 		if(isOnceNode(subNode)) { 
+ 			//Add contents of function callback
+ 			onceNodes.push(subNode.expression.arguments[1].body);
  		}
  	});
+ 	return onceNodes;
+}
+
+function isOnceNode(node, clientVarName) {
+	try{
+		if(node.type == "ExpressionStatement" &&
+		node.expression.callee.object.name == clientVarName &&
+		node.expression.callee.property.name == "once") {
+			return true;
+		}
+	} catch(e) {
+		return false;
+	}
+	return false;
 }
 
 // Gets feature flag layer of all feature flag code (client.variation)
-function getClientVariationNodes(node) {
+function getClientVariationNodes(node, clientVarName) {
 	var variationNodes = [];
  	Parser.traverse(node, function(subNode) {
- 		if(subNode.type == "IDK") { //TODO
+ 		if(isVariationNode(subNode)) { 
+ 			//Add contents of function callback
  			variationNodes.push(subNode);
  		}
  	});
+ 	return variationNodes;
+}
+
+function isVariationNode(node, clientVarName) {
+	try{
+		if(node.type == "ExpressionStatement" &&
+		node.expression.callee.object.name == clientVarName &&
+		node.expression.callee.property.name == "variation") {
+			return true;
+		}
+	} catch(e) {
+		return false;
+	}
+	return false;
 }
 
 function getVariationFlagName(variationNode) {
-	//TODO
-	return "fakename";
+	return variationNode.expression.arguments[0].value;
 }
 
 function removeFlagCode(variationNode, discardFeature) {
 	Parser.traverse(variationNode, function(subNode) {
-		if(subNode.type == "IfStatment" && !discardFeature){
-
-		}
-		// Somehow get the 'else'
+		// Look for node with...
+		// type - "IfStatement"
+		// alternate - else content
 	});
+	Parser.replace(variationNode, "//Node replaced\n");
 }
 
 function deleteLDCode() {
