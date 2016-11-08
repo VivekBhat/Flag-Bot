@@ -4,7 +4,9 @@ var fs = require("fs");
 var Esp = require ("esprima");
 var launchDarklyLibrary = "ldclient-node";
 
-parseCode("test.js", "new-search-bar");
+/** Assumptions that would mess us up **/
+//  * Library and client variables are in every file - could be imported somehow
+parseCode("test.js", "new-search-bar"); 
 
 /**************************************************/
 /* Public
@@ -37,6 +39,7 @@ module.exports = {
 
 function parseCode(fileName, featureKey, discardFeature) {
 	var AST = Parser.parseFile(fileName); 
+	Parser.parentize(AST);
 	var libraryVarName = getLibraryVarName(AST);
 	var clientVarName = getClientVarName(AST, libraryVarName);
 
@@ -68,34 +71,38 @@ function findFilesWithFlag() {
 	return []; //TODO
 }
 
-// Function passed to parser that deleted LD library call code.
-// Should only be used if there are is no LD code left! (not always deleted)
 function getLibraryVarName(AST) {
 	libraryVarName = null;
 	Parser.traverse(AST, function(node){
 		if(node.type == 'Literal' && node.value == launchDarklyLibrary) {
-		//now try to get the variable name of the library call
-		console.log("Found library call.");
-		var libraryVariable = Parser.getParent(node, function(upperNode){
-			return upperNode.type == "identifier";
-		});
-		//libraryVarName = libraryVariable.name;
-	}
+			var libraryNode = Parser.getParent(node, function(upperNode){
+				return upperNode.type == "VariableDeclarator";
+			});
+			libraryVarName = libraryNode.id.name;
+		}
 	});
-	libraryVarName = "LaunchDarkly"; //TODO: remove when works
 	return libraryVarName;
 }
 
 function getClientVarName(AST, libraryVarName) {
-	//uses find library name
-	return "client";//TODO
+	clientVarName = null;
+	Parser.traverse(AST, function(node){
+		if(node.object && node.object.name == libraryVarName 
+			&& node.property && node.property.name == "init") {
+			var clientNode = Parser.getParent(node, function(upperNode){
+				return upperNode.type == "VariableDeclarator";
+			});
+			clientVarName = clientNode.id.name;
+		}
+	});
+	return clientVarName;
 }
 
 // Gets outer most layer of feature flag code (client.once)
 function getClientOnceContent(node, clientVarName) {
 	var onceNodes = [];
  	Parser.traverse(node, function(subNode) {
- 		if(isOnceNode(subNode)) { 
+ 		if(isOnceNode(subNode, clientVarName)) { 
  			//Add contents of function callback
  			onceNodes.push(subNode.expression.arguments[1].body);
  		}
@@ -105,9 +112,10 @@ function getClientOnceContent(node, clientVarName) {
 
 function isOnceNode(node, clientVarName) {
 	try{
-		if(node.type == "ExpressionStatement" &&
-		node.expression.callee.object.name == clientVarName &&
-		node.expression.callee.property.name == "once") {
+		if( (node.type === "ExpressionStatement") && 
+			(node.expression.callee.object.name === clientVarName) && 
+			(node.expression.callee.property.name === "once") ) {
+			console.log(node);
 			return true;
 		}
 	} catch(e) {
@@ -120,7 +128,7 @@ function isOnceNode(node, clientVarName) {
 function getClientVariationNodes(node, clientVarName) {
 	var variationNodes = [];
  	Parser.traverse(node, function(subNode) {
- 		if(isVariationNode(subNode)) { 
+ 		if(isVariationNode(subNode, clientVarName)) { 
  			//Add contents of function callback
  			variationNodes.push(subNode);
  		}
@@ -151,7 +159,7 @@ function removeFlagCode(variationNode, discardFeature) {
 		// type - "IfStatement"
 		// alternate - else content
 	});
-	Parser.replace(variationNode, "//Node replaced\n");
+	Parser.detach(variationNode);
 }
 
 function deleteLDCode() {
