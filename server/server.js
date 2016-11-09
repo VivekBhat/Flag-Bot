@@ -36,6 +36,8 @@ const ENVIRON = "production";
 var flagStateFileName = "flagStates.json";
 var flagStatesJSONArray;
 
+var timeoutArray = new Array();
+
 
 /*================================================
  * Server functions
@@ -123,6 +125,7 @@ function handlePost(postJSON) {
                 deleteFlag(flagKey);
                 //slackbot.notify("MOCK - do you want to delete the code for the feature flag?");
                 break;
+
             default:
                 console.log("The flag was modified, but its activation state was not affected");
         }
@@ -267,6 +270,36 @@ function getFlag(flagKey, callback) {
     });
 }
 
+/*================================================
+ * Timer functions
+ *================================================*/
+
+// This function is called upon a flag timeout
+function flagTimedOut() {
+    console.log("Timed out");
+}
+
+// Use this function to create a timeout for the specified flag
+// if a timeout in milliseconds is not specified then defaults to 7 days
+function createFlagTimeout(flagKey, msTimeout) {
+    msTimeout = (typeof msTimeout === 'undefined') ? 600000000 : msTimeout;
+
+    var newTimeout = setTimeout(flagTimedOut, msTimeout);
+
+    timeoutArray.push({flagkey:newTimeout});
+
+    console.log("Timeout for " + flagKey + " created");
+    //console.log("timeout array = " + timeoutArray);
+}
+
+// Deletes a time out for the specified flag
+function deleteFlagTimeout(flagKey) {
+    timeoutArray.splice(flagKey, 1);
+
+    console.log("Timeout for " + flagKey + " deleted");
+    //console.log("timeout array = " + timeoutArray);
+}
+
 /*function mockNotification() {
     slackbot.notify("MOCK: A feature flag has been deleted. What would you like to do? (Need button options for either integrating or discarding feature)");
 }
@@ -305,5 +338,3 @@ function serverInit() {
 }
 
 serverInit();
-
-
