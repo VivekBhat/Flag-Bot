@@ -36,6 +36,8 @@ const ENVIRON = "production";
 var flagStateFileName = "flagStates.json";
 var flagStatesJSONArray;
 
+var timeoutArray = new Array();
+
 
 /*================================================
  * Server functions
@@ -44,7 +46,6 @@ var flagStatesJSONArray;
 
 // This function handles when a post or get request is made to the node server
 function handleRequest(serverRequest, response){
-        //console.dir(serverRequest.param);
 
     if (serverRequest.method == 'POST') {
         
@@ -60,10 +61,10 @@ function handleRequest(serverRequest, response){
         });
         serverRequest.on('end', function () {
             //console.log("Body: " + body);
-            fs.writeFile("body.json", body, (err) => {
+            /*fs.writeFile("body.json", body, (err) => {
                 if(err) console.log("Error writing body");
                 else console.log("Body writing succesful");
-            })
+            })*/
 
             handlePost(body);            
         });
@@ -75,8 +76,8 @@ function handleRequest(serverRequest, response){
     {
         console.log("GET");
         //var html = '<html><body><form method="post" action="http://cutegirls.servebeer.com:40676">Name: <input type="text" name="name" /><input type="submit" value="Submit" /></form></body>';
-        var html = '<html><body><h1>This server does not accept GET requests besides this.</h1></body>';
         //var html = fs.readFileSync('index.html');
+        var html = '<html><body><h1>This server does not accept GET requests besides this.</h1></body>';
         response.writeHead(200, {'Content-Type': 'text/html'});
         response.end(html);
     }
@@ -92,19 +93,41 @@ function handlePost(postJSON) {
     // - The launchdarkly webhook policy (set on the site for the specific webhook) should eliminate the need for this test,
     //      but kept just in case
     if(post.kind === 'flag') {
-        var flagKey = post.currentVersion.key;
-        var flagCreationDate = post.currentVersion.creationDate;
-        var flagVerb = post.titleVerb;
+        var flagKey;
+        var flagCreationDate;
+        var flagJSON;
         var flagUpdateDate = post.date;
 
-        if(flagVerb == 'turned on') {
-            var flagJSON = {"key":flagKey, "createDate":flagCreationDate, "isOn":true, "activationDate":flagUpdateDate};
-            updateFlagState(flagJSON);
-        } else if(flagVerb == 'turned off') {
-            var flagJSON = {"key":flagKey, "createDate":flagCreationDate, "isOn":false, "activationDate":flagUpdateDate};
-            updateFlagState(flagJSON);
-        } else {
-            console.log("The flag was modified, but its activation state was not affected");
+        switch(post.titleVerb) {
+            case 'turned on':
+                flagKey = post.currentVersion.key;
+                flagCreationDate = post.currentVersion.creationDate;
+                flagJSON = {"key":flagKey, "createDate":flagCreationDate, "isOn":true, "activationDate":flagUpdateDate};
+                updateFlagState(flagJSON);
+                break;
+
+            case 'turned off':
+                flagKey = post.currentVersion.key;
+                flagCreationDate = post.currentVersion.creationDate;
+                flagJSON = {"key":flagKey, "createDate":flagCreationDate, "isOn":false, "activationDate":flagUpdateDate};
+                updateFlagState(flagJSON);
+                break;
+
+            case 'created flag':
+                flagKey = post.currentVersion.key;
+                flagCreationDate = post.currentVersion.creationDate;
+                flagJSON = {"key":flagKey, "createDate":flagCreationDate, "isOn":false, "activationDate":flagUpdateDate};
+                updateFlagState(flagJSON);
+                break;
+
+            case 'deleted flag':
+                flagKey = post.previousVersion.key;
+                deleteFlag(flagKey);
+                //slackbot.notify("MOCK - do you want to delete the code for the feature flag?");
+                break;
+
+            default:
+                console.log("The flag was modified, but its activation state was not affected");
         }
     } else {
         console.log("Post was not feature flag related");
@@ -126,6 +149,18 @@ function doesFlagExist(flagKey) {
         }
     }
     return -1;
+}
+
+function deleteFlag(flagKey) {
+    var flagIndex = doesFlagExist(flagKey);
+
+    if(flagIndex >= 0) {
+        flagStatesJSONArray.splice(flagIndex, 1);
+    } else {
+        throw { name: 'NonExistentFlag', message: 'The flag to be deleted did not exist in the flag state file!' };
+    }
+
+    saveFlagStates();
 }
 
 // Updates flag if it exists in the flag state file, or adds it if not
@@ -235,6 +270,36 @@ function getFlag(flagKey, callback) {
     });
 }
 
+/*================================================
+ * Timer functions
+ *================================================*/
+
+// This function is called upon a flag timeout
+function flagTimedOut() {
+    console.log("Timed out");
+}
+
+// Use this function to create a timeout for the specified flag
+// if a timeout in milliseconds is not specified then defaults to 7 days
+function createFlagTimeout(flagKey, msTimeout) {
+    msTimeout = (typeof msTimeout === 'undefined') ? 600000000 : msTimeout;
+
+    var newTimeout = setTimeout(flagTimedOut, msTimeout);
+
+    timeoutArray.push({flagkey:newTimeout});
+
+    console.log("Timeout for " + flagKey + " created");
+    //console.log("timeout array = " + timeoutArray);
+}
+
+// Deletes a time out for the specified flag
+function deleteFlagTimeout(flagKey) {
+    timeoutArray.splice(flagKey, 1);
+
+    console.log("Timeout for " + flagKey + " deleted");
+    //console.log("timeout array = " + timeoutArray);
+}
+
 /*function mockNotification() {
     slackbot.notify("MOCK: A feature flag has been deleted. What would you like to do? (Need button options for either integrating or discarding feature)");
 }
@@ -246,27 +311,30 @@ setInterval(mockNotification, 20000);*/
  * Server Init
  *================================================*/
 
+function serverInit() {
+    // Lets loaded our saved flag data
+    loadFlagStates(function(data){
+        if(data != "") {
+            flagStatesJSONArray = JSON.parse(data);
+            console.log("Flag states file loaded.");         
+        } else {
+            flagStatesJSONArray = new Array();
+            console.log("Flag stats file was empty.");
+        }
+    });
 
-// Lets loaded our saved flag data
-loadFlagStates(function(data){
-    if(data != "") {
-        flagStatesJSONArray = JSON.parse(data);
-        console.log("Flag states file loaded.");         
-    } else {
-        flagStatesJSONArray = new Array();
-        console.log("Flag stats file was empty.");
-    }
-});
-
-// Lets ensure that our flag state file is up-to-date
-getAllFlags();
+    // Lets ensure that our flag state file is up-to-date
+    getAllFlags();
 
 
-//Lets create the server
-var server = http.createServer(handleRequest);
+    //Lets create the server
+    var server = http.createServer(handleRequest);
 
-//Lets start our server
-server.listen(PORT, function(){
-    //Callback triggered when server is successfully listening. Hurray!
-    console.log("Server listening on: http://localhost:%s", PORT);
-});
+    //Lets start our server
+    server.listen(PORT, function(){
+        //Callback triggered when server is successfully listening. Hurray!
+        console.log("Server listening on: http://localhost:%s", PORT);
+    });
+}
+
+serverInit();
