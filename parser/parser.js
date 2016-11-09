@@ -6,6 +6,7 @@ var launchDarklyLibrary = "ldclient-node";
 
 /** Assumptions that would mess us up **/
 //  * Library and client variables are in every file - could be imported somehow
+
 parseCode("test.js", "new-search-bar"); 
 
 /**************************************************/
@@ -14,10 +15,12 @@ parseCode("test.js", "new-search-bar");
 
 module.exports = {
 
+	parseCode : parseCode
+
 	// Public function to delete a feature flag
 	// discardFeature: true if you want to remove all new code
 	// returns a promise
-	deleteFeatureFlag : function(featureKey, discardFeature) {
+	/*deleteFeatureFlag : function(featureKey, discardFeature) {
 		return new Promise ( function(resolve, reject) { 
 			var files = findFilesWithFlag();
 			if(files.length == 0) {
@@ -28,29 +31,29 @@ module.exports = {
 				parseCode(file, featureKey, discardFeature);
 			})
 			resolve();
-			// Promise doc: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
 		});
-	} 
-}
+	} */
+} 
 
 /**************************************************/
 /* Private
 /**************************************************/
 
 function parseCode(fileName, featureKey, discardFeature) {
-	var AST = Parser.parseFile(fileName); 
+	this.fileName = fileName;
+	this.AST = Parser.parseFile(fileName); 
 	Parser.parentize(AST);
-	var libraryVarName = getLibraryVarName(AST);
-	var clientVarName = getClientVarName(AST, libraryVarName);
+	this.libraryVarName = getLibraryVarName();
+	this.clientVarName = getClientVarName();
 
 	var featureCodeLeft = false; //Other feature flags are still here (used for removing library code
-	_.each(getClientOnceContent(AST, clientVarName), function(onceNode) {
-		console.log("Once node found");
-		_.each(getClientVariationNodes(onceNode, clientVarName), function(variationNode) {
-			console.log("Variation node found");
-			var featureName = getVariationFlagName(variationNode);
+	_.each(getClientOnceNodes(), function(onceNode) {
+		_.each(getClientVariationNodes(onceNode), function(variationNode) {
+			var featureName = variationNode.getFlagName();
 			if(featureName == featureKey) {
-				removeFlagCode(variationNode);
+				//Neeed to get flagBool somehow. For now, hardcode for testing
+				var flagBool = "showFeature"; //TODO!!!
+				removeFlagCode(flagBool, variationNode, onceNode);
 			} else {
 				featureCodeLeft = true;
 			}
@@ -59,21 +62,18 @@ function parseCode(fileName, featureKey, discardFeature) {
 	if(!featureCodeLeft) {
 		deleteLDCode();
 	}
+	saveFile();
+}
 
-	var wstream = fs.createWriteStream('testModified.js');
-	wstream.write(Parser.getCode(AST));
+function saveFile() {
+	var wstream = fs.createWriteStream('testModified.js'); //TODO: use filename
+	wstream.write(Parser.getCode(this.AST));
 	wstream.end();
 }
 
-// Returns files that use the feature flags, using simple string 
-// matching with the feature flag key.
-function findFilesWithFlag() {
-	return []; //TODO
-}
-
-function getLibraryVarName(AST) {
+function getLibraryVarName() {
 	libraryVarName = null;
-	Parser.traverse(AST, function(node){
+	Parser.traverse(this.AST, function(node){
 		if(node.type == 'Literal' && node.value == launchDarklyLibrary) {
 			var libraryNode = Parser.getParent(node, function(upperNode){
 				return upperNode.type == "VariableDeclarator";
@@ -84,10 +84,11 @@ function getLibraryVarName(AST) {
 	return libraryVarName;
 }
 
-function getClientVarName(AST, libraryVarName) {
+function getClientVarName() {
 	clientVarName = null;
-	Parser.traverse(AST, function(node){
-		if(node.object && node.object.name == libraryVarName 
+	var that = this;
+	Parser.traverse(this.AST, function(node){
+		if(node.object && node.object.name == that.libraryVarName 
 			&& node.property && node.property.name == "init") {
 			var clientNode = Parser.getParent(node, function(upperNode){
 				return upperNode.type == "VariableDeclarator";
@@ -99,69 +100,95 @@ function getClientVarName(AST, libraryVarName) {
 }
 
 // Gets outer most layer of feature flag code (client.once)
-function getClientOnceContent(node, clientVarName) {
+function getClientOnceNodes() {
 	var onceNodes = [];
- 	Parser.traverse(node, function(subNode) {
- 		if(isOnceNode(subNode, clientVarName)) { 
- 			//Add contents of function callback
- 			onceNodes.push(subNode.expression.arguments[1].body);
+ 	Parser.traverse(this.AST, function(subNode) {
+ 		if(isOnceNode(subNode, this.clientVarName)) { 
+ 			onceNodes.push(new OnceNode(subNode));
  		}
  	});
  	return onceNodes;
 }
 
-function isOnceNode(node, clientVarName) {
-	try{
-		if( (node.type === "ExpressionStatement") && 
-			(node.expression.callee.object.name === clientVarName) && 
-			(node.expression.callee.property.name === "once") ) {
-			console.log(node);
-			return true;
-		}
-	} catch(e) {
-		return false;
-	}
-	return false;
-}
-
 // Gets feature flag layer of all feature flag code (client.variation)
-function getClientVariationNodes(node, clientVarName) {
+function getClientVariationNodes(onceNode) {
 	var variationNodes = [];
- 	Parser.traverse(node, function(subNode) {
- 		if(isVariationNode(subNode, clientVarName)) { 
- 			//Add contents of function callback
- 			variationNodes.push(subNode);
+ 	Parser.traverse(onceNode, function(subNode) {
+ 		if(isVariationNode(subNode, this.clientVarName)) { 
+ 			variationNodes.push(new VariationNode(subNode));
  		}
- 	});
+ 	}.bind(this));
  	return variationNodes;
 }
 
-function isVariationNode(node, clientVarName) {
+function isOnceNode(node) {
 	try{
-		if(node.type == "ExpressionStatement" &&
-		node.expression.callee.object.name == clientVarName &&
-		node.expression.callee.property.name == "variation") {
+		if( (node.type == "ExpressionStatement") && 
+			(node.expression.callee.object.name == this.clientVarName) && 
+			(node.expression.callee.property.name == "once") ) {
 			return true;
 		}
+		return false;
 	} catch(e) {
 		return false;
 	}
-	return false;
 }
 
-function getVariationFlagName(variationNode) {
-	return variationNode.expression.arguments[0].value;
+function isVariationNode(node) {
+	try{
+		if(node.type == "ExpressionStatement" &&
+		node.expression.callee.object.name == this.clientVarName &&
+		node.expression.callee.property.name == "variation") {
+			return true;
+		}
+		return false;
+	} catch(e) {
+		return false;
+	}
 }
 
-function removeFlagCode(variationNode, discardFeature) {
+function removeFlagCode(flagBool, variationNode, onceNode, discardFeature) {
 	Parser.traverse(variationNode, function(subNode) {
-		// Look for node with...
-		// type - "IfStatement"
-		// alternate - else content
+		// TODO: what if do !showFeature
+		if(subNode.type == "IfStatement" && subNode.test.name == flagBool) {
+			//Move contents of if outside of if
+			Parser.attachBefore(subNode, Parser.toProgram(subNode.consequent.body));
+			Parser.detach(subNode);
+		}
 	});
-	Parser.detach(variationNode);
+
+	//TODO: handle case where more than one flag in once node
+	var codeToKeep = variationNode.getCallbackContent();
+	//Parser.attachBefore(onceNode, Parser.toProgram(codeToKeep));
+	//Parser.detach(onceNode);
+	Parser.attachBefore(onceNode, Parser.toProgram(onceNode));
 }
 
 function deleteLDCode() {
 	//TODO
+}
+
+/********************* Node Objects ***********************/
+
+function OnceNode(node) {
+
+	//TODO
+	node.getFlagBool = function(){
+		return "showFeature";
+	}	
+
+	return node;
+}
+
+function VariationNode(node) {
+
+	node.getFlagName = function(){
+		return node.expression.arguments[0].value;
+	}
+
+	node.getCallbackContent = function(){
+		return node.expression.arguments[3].body;
+	}
+
+	return node;
 }
