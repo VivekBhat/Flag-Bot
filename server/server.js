@@ -104,6 +104,8 @@ function handlePost(postJSON) {
                 flagCreationDate = post.currentVersion.creationDate;
                 flagJSON = {"key":flagKey, "createDate":flagCreationDate, "isOn":true, "activationDate":flagUpdateDate};
                 updateFlagState(flagJSON);
+
+                createFlagTimeout(flagKey);
                 break;
 
             case 'turned off':
@@ -111,6 +113,8 @@ function handlePost(postJSON) {
                 flagCreationDate = post.currentVersion.creationDate;
                 flagJSON = {"key":flagKey, "createDate":flagCreationDate, "isOn":false, "activationDate":flagUpdateDate};
                 updateFlagState(flagJSON);
+
+                deleteFlagTimeout(flagKey);
                 break;
 
             case 'created flag':
@@ -124,6 +128,8 @@ function handlePost(postJSON) {
                 flagKey = post.previousVersion.key;
                 deleteFlag(flagKey);
                 //slackbot.notify("MOCK - do you want to delete the code for the feature flag?");
+
+                deleteFlagTimeout(flagKey);
                 break;
 
             default:
@@ -239,6 +245,8 @@ function getAllFlags() {
             getFlag(flagKey, function (flagJSON) {
                 //console.log(flag);
                 updateFlagState(flagJSON);
+
+                if(flagJSON.isOn ) { createFlagTimeout(flagJSON.key); }
             });
         }
     });
