@@ -196,12 +196,14 @@ bot.on('message', function(data) {
 
 //Posts message to notificationChannels array defined at top
 function notify(msg) {
-    _.each(notificationChannels, function(channelId) {
-        var channel = getChannel(channelId);
-        if( channel ) 
-        {
-            bot.postMessageToChannel(channel.name, msg, {as_user: sendAsUser});    
-        }
+    bot.getChannels().then(function(){
+        _.each(notificationChannels, function(channelId) {
+            var channel = getChannel(channelId);
+            if( channel ) 
+            {
+                bot.postMessageToChannel(channel.name, msg, {as_user: sendAsUser});    
+            }
+        });
     });
 }
 
@@ -262,6 +264,7 @@ function discardFeature(flagKey){
     });
 }
 
+/*
 
 // =========BOT BUTTON=========
 var Botkit = require('botkit');
@@ -323,3 +326,5 @@ var msg =
         }
     ]
 }
+
+*/
