@@ -18,6 +18,7 @@ var request = require('request');
 
 // removed until import error repaired
 var slackbot = require('../slack/slackbot');
+var slackbotReady = slackbot.readyPromise;
 
 
 /*================================================
@@ -285,7 +286,9 @@ function getFlag(flagKey, callback) {
 // This function is called upon a flag timeout
 function flagTimedOut(flagKey, msTimeout) {
     //console.log("Timed out " + flagKey + msTimeout + "ms");
-    slackbot.notify("The flag " + flagKey + "has been activated for " + msTimeout + "ms what would you like to do?");
+    slackbotReady.then(function(){
+        slackbot.notify("The flag " + flagKey + "has been activated for " + msTimeout + "ms what would you like to do?");
+    });
 }
 
 // Use this function to create a timeout for the specified flag
