@@ -17,7 +17,7 @@ var fs = require('fs');
 var request = require('request');
 
 // removed until import error repaired
-//var slackbot = require('../slack/slackbot');
+var slackbot = require('../slack/slackbot');
 
 
 /*================================================
@@ -127,7 +127,7 @@ function handlePost(postJSON) {
             case 'deleted flag':
                 flagKey = post.previousVersion.key;
                 deleteFlag(flagKey);
-                //slackbot.notify("MOCK - do you want to delete the code for the feature flag?");
+                slackbot.notify(flagKey + " has been deleted...");
 
                 deleteFlagTimeout(flagKey);
                 break;
@@ -246,7 +246,7 @@ function getAllFlags() {
                 //console.log(flag);
                 updateFlagState(flagJSON);
 
-                if(flagJSON.isOn ) { createFlagTimeout(flagJSON.key); }
+                if(flagJSON.isOn ) { createFlagTimeout(flagJSON.key, 10000); }
             });
         }
     });
@@ -283,8 +283,9 @@ function getFlag(flagKey, callback) {
  *================================================*/
 
 // This function is called upon a flag timeout
-function flagTimedOut() {
-    console.log("Timed out");
+function flagTimedOut(flagKey, msTimeout) {
+    //console.log("Timed out " + flagKey + msTimeout + "ms");
+    slackbot.notify("The flag " + flagKey + "has been activated for " + msTimeout + "ms what would you like to do?");
 }
 
 // Use this function to create a timeout for the specified flag
@@ -292,7 +293,7 @@ function flagTimedOut() {
 function createFlagTimeout(flagKey, msTimeout) {
     msTimeout = (typeof msTimeout === 'undefined') ? 600000000 : msTimeout;
 
-    var newTimeout = setTimeout(flagTimedOut, msTimeout);
+    var newTimeout = setTimeout(flagTimedOut(flagKey, msTimeout), msTimeout);
 
     timeoutArray.push({flagkey:newTimeout});
 
