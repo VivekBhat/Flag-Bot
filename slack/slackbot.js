@@ -45,8 +45,15 @@ var bot = new SlackBot({
     token: "xoxb-92608187490-1D8dc3X5vPjn6LPbjZucNEGx", 
     name: 'FlagLag Bot'
 });
- 
-bot.on('start', function() {    
+
+var readyPromise = new Promise(function(resolve, reject){
+    bot.on('start', function() {
+        resolve();
+    });
+});
+
+readyPromise.then(function(){
+    console.log("Bot is ready!");
     notify(getCommands());
 });
 
@@ -238,10 +245,6 @@ function getUser(userId)
     })[0];
 }
 
-module.exports = {
-    notify : notify
-}
-
 /***************** Bot Actions *******************/
 
 function integrateFeature(flagKey){
@@ -262,6 +265,12 @@ function discardFeature(flagKey){
     .catch( function(err) {
         reply(data, "Sorry, there was a problem discarding your feature.");
     });
+}
+
+/***************** Exports *******************/
+module.exports = {
+    readyPromise : readyPromise,
+    notify : notify
 }
 
 /*
