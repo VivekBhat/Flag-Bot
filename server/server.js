@@ -128,7 +128,9 @@ function handlePost(postJSON) {
             case 'deleted flag':
                 flagKey = post.previousVersion.key;
                 deleteFlag(flagKey);
-                slackbot.notify(flagKey + " has been deleted...");
+                slackbotReady.then(function(){
+                    slackbot.notify(flagKey + " has been deleted...");
+                });
 
                 deleteFlagTimeout(flagKey);
                 break;
@@ -313,7 +315,9 @@ function deleteFlagTimeout(flagKey) {
 }
 
 /*function mockNotification() {
-    slackbot.notify("MOCK: A feature flag has been deleted. What would you like to do? (Need button options for either integrating or discarding feature)");
+    slackbotReady.then(function(){
+        slackbot.notify("MOCK: A feature flag has been deleted. What would you like to do? (Need button options for either integrating or discarding feature)");
+    });
 }
 
 setInterval(mockNotification, 20000);*/

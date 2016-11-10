@@ -54,7 +54,7 @@ var readyPromise = new Promise(function(resolve, reject){
 
 readyPromise.then(function(){
     console.log("Bot is ready!");
-    notify(getCommands());
+    //notify(getCommands());
 });
 
 var commands = [
