@@ -14,13 +14,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "underscore": "^1.8.3",
+    "escodegen": "^1.8.1",
+    "esprima": "~1.0.4",
+    "esprima-ast-utils": "^0.0.6",
+    "esprima-walk": "^0.1.0",
+    "ldclient-node": "^3.0.3",
+    "nock": "^0.34.1",
     "request": "^2.75.0",
     "slackbots": "^0.5.1",
-    "nock": "^0.34.1",
-    "ldclient-node": "^3.0.3",
-    "esprima": "~1.0.4",
-    "esprima-ast-utils": "^0.0.6"
+    "underscore": "^1.8.3"
   }
-
 }

@@ -1,13 +1,14 @@
 var _ = require("underscore");
-var Parser = require("esprima-ast-utils");
 var fs = require("fs");
-var Esp = require ("esprima");
+var esprima = require("esprima");
+var walk = require("esprima-walk");
+var escodegen = require("escodegen")
 var launchDarklyLibrary = "ldclient-node";
 
 /** Assumptions that would mess us up **/
 //  * Library and client variables are in every file - could be imported somehow
 
-parseCode("test.js", "new-search-bar"); 
+//parseCode("test.js", "new-search-bar"); 
 
 /**************************************************/
 /* Public
@@ -39,46 +40,63 @@ module.exports = {
 /* Private
 /**************************************************/
 
-function parseCode(fileName, featureKey, discardFeature) {
-	this.fileName = fileName;
-	this.AST = Parser.parseFile(fileName); 
-	Parser.parentize(AST);
-	this.libraryVarName = getLibraryVarName();
-	this.clientVarName = getClientVarName();
+function parseCode(filePath, featureKey, discardFeature) {
 
-	var featureCodeLeft = false; //Other feature flags are still here (used for removing library code
-	_.each(getClientOnceNodes(), function(onceNode) {
-		_.each(getClientVariationNodes(onceNode), function(variationNode) {
-			var featureName = variationNode.getFlagName();
-			if(featureName == featureKey) {
-				//Neeed to get flagBool somehow. For now, hardcode for testing
-				var flagBool = "showFeature"; //TODO!!!
-				removeFlagCode(flagBool, variationNode, onceNode);
-			} else {
-				featureCodeLeft = true;
-			}
+	this.filePath = filePath;
+
+	fs.readFile(filePath, (err, file) => {
+ 		if (err) throw err;
+
+		this.AST = esprima.parse(file); 
+
+
+		//this.libraryVarName = getLibraryVarName();
+		//this.clientVarName = getClientVarName();
+
+		console.log(this.libraryVarName);
+		console.log(this.clientVarName);
+
+		var featureCodeLeft = false; //Other feature flags are still here (used for removing library code
+		_.each(getClientOnceNodes(), function(onceNode) {
+			_.each(getClientVariationNodes(onceNode), function(variationNode) {
+				console.log(variationNode);
+				var featureName = variationNode.getFlagName();
+				if(featureName == featureKey) {
+					//Neeed to get flagBool somehow. For now, hardcode for testing
+					var flagBool = "showFeature"; //TODO!!!
+					//removeFlagCode(flagBool, variationNode, onceNode);
+				} else {
+					featureCodeLeft = true;
+				}
+			});
 		});
+		if(!featureCodeLeft) {
+			deleteLDCode();
+		}
+		saveFile();
+
 	});
-	if(!featureCodeLeft) {
-		deleteLDCode();
-	}
-	saveFile();
 }
 
 function saveFile() {
+
 	var wstream = fs.createWriteStream('testModified.js'); //TODO: use filename
-	wstream.write(Parser.getCode(this.AST));
+	wstream.write(escodegen.generate(this.AST));
 	wstream.end();
 }
 
 function getLibraryVarName() {
 	libraryVarName = null;
-	Parser.traverse(this.AST, function(node){
+	var tempAST = this.AST;
+	walk.walkAddParent(tempAST, function(node){
 		if(node.type == 'Literal' && node.value == launchDarklyLibrary) {
-			var libraryNode = Parser.getParent(node, function(upperNode){
-				return upperNode.type == "VariableDeclarator";
-			});
-			libraryVarName = libraryNode.id.name;
+			while(node.parent){
+				if(node.type == "VariableDeclarator") {
+					libraryVarName =  node.id.name;
+					break;
+				}
+				node = node.parent;
+			}
 		}
 	});
 	return libraryVarName;
@@ -87,13 +105,17 @@ function getLibraryVarName() {
 function getClientVarName() {
 	clientVarName = null;
 	var that = this;
-	Parser.traverse(this.AST, function(node){
+	var tempAST = this.AST;
+	walk.walkAddParent(tempAST, function(node){
 		if(node.object && node.object.name == that.libraryVarName 
 			&& node.property && node.property.name == "init") {
-			var clientNode = Parser.getParent(node, function(upperNode){
-				return upperNode.type == "VariableDeclarator";
-			});
-			clientVarName = clientNode.id.name;
+			while(node.parent){
+				if(node.type == "VariableDeclarator") {
+					clientVarName =  node.id.name;
+					break;
+				}
+				node = node.parent;
+			}
 		}
 	});
 	return clientVarName;
@@ -102,18 +124,20 @@ function getClientVarName() {
 // Gets outer most layer of feature flag code (client.once)
 function getClientOnceNodes() {
 	var onceNodes = [];
- 	Parser.traverse(this.AST, function(subNode) {
+ 	walk(this.AST, function(subNode) {
+ 		//console.log(subNode);
  		if(isOnceNode(subNode, this.clientVarName)) { 
  			onceNodes.push(new OnceNode(subNode));
  		}
  	});
+ 	console.log(onceNodes);
  	return onceNodes;
 }
 
 // Gets feature flag layer of all feature flag code (client.variation)
 function getClientVariationNodes(onceNode) {
 	var variationNodes = [];
- 	Parser.traverse(onceNode, function(subNode) {
+ 	walk(onceNode, function(subNode) {
  		if(isVariationNode(subNode, this.clientVarName)) { 
  			variationNodes.push(new VariationNode(subNode));
  		}
@@ -148,12 +172,18 @@ function isVariationNode(node) {
 }
 
 function removeFlagCode(flagBool, variationNode, onceNode, discardFeature) {
-	Parser.traverse(variationNode, function(subNode) {
+	walk(variationNode, function(subNode) {
 		// TODO: what if do !showFeature
 		if(subNode.type == "IfStatement" && subNode.test.name == flagBool) {
 			//Move contents of if outside of if
-			Parser.attachBefore(subNode, Parser.toProgram(subNode.consequent.body));
-			Parser.detach(subNode);
+			//Parser.attachBefore(subNode, Parser.toProgram(subNode.consequent.body));
+			var insideIf = Parser.toProgram(subNode);
+			//Parser.detach(subNode);
+			console.log(onceNode.range);
+			console.log(insideIf);
+			//Parser.injectCode(this.AST, onceNode.range, subNode);
+			//console.log(Parser.getCode(onceNode));
+			Parser.attachAfterComment(this.AST, "attachafterme", Parser.toProgram(subNode))
 		}
 	});
 
@@ -161,7 +191,7 @@ function removeFlagCode(flagBool, variationNode, onceNode, discardFeature) {
 	var codeToKeep = variationNode.getCallbackContent();
 	//Parser.attachBefore(onceNode, Parser.toProgram(codeToKeep));
 	//Parser.detach(onceNode);
-	Parser.attachBefore(onceNode, Parser.toProgram(onceNode));
+	//Parser.attachBefore(onceNode, Parser.toProgram(onceNode));
 }
 
 function deleteLDCode() {

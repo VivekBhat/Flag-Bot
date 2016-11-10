@@ -8,7 +8,7 @@ var sendAsUser = false;
 
 //TESTING!
 /**************************************************************************/ 
-var testing = true;
+var testing = false;
 if(testing) {
     var nock = require('nock');
     var fs = require('fs');
@@ -181,27 +181,11 @@ bot.on('message', function(data) {
                 break;
 
             case 'integrate feature':
-                //(featureKey, discardFeature)
-                //TODO: return promise so that we can implement callback response
-                // Option- could also handle message here
-                var flagDeletedPromise = Parser.deleteFeatureFlag(argument);
-                flagDeletedPromise.then( function(val) {
-                    reply(data, "Success! Your feature was integreted into your code.");
-                })
-                .catch( function(err) {
-                    reply(data, "Sorry, there was a problem integrating your feature.");
-                });
+                integrateFeature(argument);                
                 break;
 
             case 'discard feature':
-                //TODO: return promise so that we can implement callback response
-                var flagDeletedPromise = Parser.deleteFeatureFlag(argument, true);
-                flagDeletedPromise.then( function(val) {
-                    reply(data, "Success! Your feature was discarded from your code.");
-                })
-                .catch( function(err) {
-                    reply(data, "Sorry, there was a problem discarding your feature.");
-                });
+                discardFeature(argument);
                 break;
 
             default :
@@ -254,4 +238,26 @@ function getUser(userId)
 
 module.exports = {
     notify : notify
+}
+
+/***************** Bot Actions *******************/
+
+function integrateFeature(flagKey){
+    var flagDeletedPromise = Parser.deleteFeatureFlag(flagKey);
+    flagDeletedPromise.then( function(val) {
+        reply(data, "Success! Your feature was integreted into your code.");
+    })
+    .catch( function(err) {
+        reply(data, "Sorry, there was a problem integrating your feature.");
+    });
+}
+
+function discardFeature(flagKey){
+    var flagDeletedPromise = Parser.deleteFeatureFlag(flagKey, true);
+    flagDeletedPromise.then( function(val) {
+        reply(data, "Success! Your feature was discarded from your code.");
+    })
+    .catch( function(err) {
+        reply(data, "Sorry, there was a problem discarding your feature.");
+    });
 }

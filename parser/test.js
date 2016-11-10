@@ -14,6 +14,8 @@ var user = {
   }
 };
 
+//attachafterme
+
 client.once('ready', function() {
   client.variation("new-search-bar", user, false, function(err, showFeature) {
     if (showFeature) {
@@ -39,8 +41,10 @@ var options = {
   }
 };
 
+
 request(options, function (error, response, body) 
 {
-	console.log("Status code: " + response.statusCode);
-	console.log(body);
+  console.log("Status code: " + response.statusCode);
+  console.log(body);
 });
+
