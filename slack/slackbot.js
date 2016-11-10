@@ -214,6 +214,7 @@ function notify(msg) {
     });
 }
 
+
 function reply(data, msg)
 {
     var channel = getChannel(data.channel)
@@ -270,17 +271,17 @@ function discardFeature(flagKey){
 /***************** Exports *******************/
 module.exports = {
     readyPromise : readyPromise,
-    notify : notify
+    notify : notify,
+    postMessageToChannel: postMessageToChannel
 }
 
-/*
 
 // =========BOT BUTTON=========
 var Botkit = require('botkit');
 
 // connect the bot to a stream of messages
 controller.spawn({
-  token: 'xoxb-92608187490-1D8dc3X5vPjn6LPbjZucNEGx',
+  token: 'xoxb-101499277473-zwmiBF1e1azyeXflzrOzbvpF',
 }).startRTM()
 
 var controller = Botkit.slackbot({
@@ -290,7 +291,7 @@ var controller = Botkit.slackbot({
 });
 
 
-controller.hears('delete',['mention', 'direct_mention'], function(bot,message) {
+controller.hears('deleted',['mention', 'direct_mention'], function(bot,message) {
 	bot.reply(message,msg);
 });
 
@@ -335,5 +336,3 @@ var msg =
         }
     ]
 }
-
-*/

@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "botkit": "^0.4.1",
     "escodegen": "^1.8.1",
     "esprima": "~1.0.4",
     "esprima-ast-utils": "^0.0.6",
