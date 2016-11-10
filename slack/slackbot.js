@@ -262,3 +262,64 @@ function discardFeature(flagKey){
     });
 }
 
+
+// =========BOT BUTTON=========
+var Botkit = require('botkit');
+
+// connect the bot to a stream of messages
+controller.spawn({
+  token: 'xoxb-101499277473-zwmiBF1e1azyeXflzrOzbvpF',
+}).startRTM()
+
+var controller = Botkit.slackbot({
+  debug: false
+  //include "log: false" to disable logging
+  //or a "logLevel" integer from 0 to 7 to adjust logging verbosity
+});
+
+
+controller.hears('delete',['mention', 'direct_mention'], function(bot,message) {
+	bot.reply(message,msg);
+});
+
+
+var msg = 
+	{
+    "text": "Would you like to delete the feature?",
+    "attachments": [
+        {
+            "text": "Choose a game to play",
+            "fallback": "You are unable to choose a game",
+            "callback_id": "wopr_game",
+            "color": "#3AA3E3",
+            "attachment_type": "default",
+            "actions": [
+                {
+                    "name": "chess",
+                    "text": "Chess",
+                    "type": "button",
+                    "value": "chess"
+                },
+                {
+                    "name": "maze",
+                    "text": "Falken's Maze",
+                    "type": "button",
+                    "value": "maze"
+                },
+                {
+                    "name": "war",
+                    "text": "Thermonuclear War",
+                    "style": "danger",
+                    "type": "button",
+                    "value": "war",
+                    "confirm": {
+                        "title": "Are you sure?",
+                        "text": "Wouldn't you prefer a good game of chess?",  //extra messages
+                        "ok_text": "Yes",
+                        "dismiss_text": "No"
+                    }
+                }
+            ]
+        }
+    ]
+}
