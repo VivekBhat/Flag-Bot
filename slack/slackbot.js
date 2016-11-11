@@ -271,8 +271,7 @@ function discardFeature(flagKey){
 /***************** Exports *******************/
 module.exports = {
     readyPromise : readyPromise,
-    notify : notify,
-    postMessageToChannel: postMessageToChannel
+    notify : notify
 }
 
 
