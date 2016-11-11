@@ -219,55 +219,6 @@ function notify(msg) {
     });
 }
 
-var msg2 = 
-	{
-    "text": "Would you like to integrate or delete the feature?",
-            
-    "attachments": [
-        {  
-            "text": "Choose an option: ",
-            "fallback": "You are unable to choose a game",
-            "callback_id": "wopr_game",
-            "color": "#3AA3E3",
-            "attachment_type": "default",
-            "actions": [
-                {
-                    "name": "chess",
-                    "text": "Integrate Feature",
-                    "type": "button",
-                    "value": "chess"
-                },
-                {
-                    "name": "war",
-                    "text": "Discard feature",
-                    "style": "danger",
-                    "type": "button",
-                    "value": "war",
-                    "confirm": {
-                        "title": "Are you sure?",
-                        "text": "Wouldn't you prefer something else?",  //extra messages
-                        "ok_text": "Yes",
-                        "dismiss_text": "No"
-                    }
-                }
-            ]
-        }
-    ]
-}
-
-function notify2(msg) {
-    bot.getChannels().then(function(){
-        _.each(notificationChannels, function(channelId) {
-            var channel = getChannel(channelId);
-            if( channel ) 
-            {
-                bot.postMessageToChannel(channel.name, msg2, {as_user: sendAsUser});    
-            }
-        });
-    });
-}
-
-
 
 function reply(data, msg)
 {
@@ -325,8 +276,7 @@ function discardFeature(flagKey){
 /***************** Exports *******************/
 module.exports = {
     readyPromise : readyPromise,
-    notify : notify,
-    notify2 : notify2
+    notify : notify
 }
 
 
@@ -355,6 +305,7 @@ controller.hears('deleted',['mention', 'direct_mention'], function(bot,message) 
 var msg = 
 	{
     "text": "Would you like to integrate or delete the feature?",
+    "username": "ButtonBot",
     "icon_emoji": ":unicorn_face:",
             
     "attachments": [
