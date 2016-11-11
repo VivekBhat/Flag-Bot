@@ -298,10 +298,10 @@ controller.hears('deleted',['mention', 'direct_mention'], function(bot,message) 
 
 var msg = 
 	{
-    "text": "Would you like to delete the feature?",
+    "text": "Would you like to integrate or delete the feature?",
     "attachments": [
         {
-            "text": "Choose a game to play",
+            "text": "Choose an option: ",
             "fallback": "You are unable to choose a game",
             "callback_id": "wopr_game",
             "color": "#3AA3E3",
@@ -309,19 +309,13 @@ var msg =
             "actions": [
                 {
                     "name": "chess",
-                    "text": "Chess",
+                    "text": "Integrate Feature",
                     "type": "button",
                     "value": "chess"
                 },
                 {
-                    "name": "maze",
-                    "text": "Falken's Maze",
-                    "type": "button",
-                    "value": "maze"
-                },
-                {
                     "name": "war",
-                    "text": "Thermonuclear War",
+                    "text": "Discard feature",
                     "style": "danger",
                     "type": "button",
                     "value": "war",
