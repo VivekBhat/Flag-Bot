@@ -48,10 +48,10 @@ var bot = new SlackBot({
 
 var readyPromise = new Promise(function(resolve, reject){
     bot.on('start', function() {
-        var params = {
-        username: 'Buttons',
-        icon_emoji: ':unicorn_face:'
-    };
+    //     var params = {
+    //     username: 'Buttons',
+    //     icon_emoji: ':unicorn_face:'
+    // };
         resolve();
 
     });
@@ -291,6 +291,7 @@ var controller = Botkit.slackbot({
   //or a "logLevel" integer from 0 to 7 to adjust logging verbosity
 });
 
+
 controller.spawn({
   token: 'xoxb-101499277473-zwmiBF1e1azyeXflzrOzbvpF',
 }).startRTM()
@@ -304,8 +305,11 @@ controller.hears('deleted',['mention', 'direct_mention'], function(bot,message) 
 var msg = 
 	{
     "text": "Would you like to integrate or delete the feature?",
+    "username": "ButtonBot",
+    "icon_emoji": ":unicorn_face:",
+            
     "attachments": [
-        {
+        {  
             "text": "Choose an option: ",
             "fallback": "You are unable to choose a game",
             "callback_id": "wopr_game",
