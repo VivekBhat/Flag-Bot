@@ -48,7 +48,11 @@ var bot = new SlackBot({
 
 var readyPromise = new Promise(function(resolve, reject){
     bot.on('start', function() {
+        var params = {
+        icon_emoji: ':unicorn_face:'
+    };
         resolve();
+
     });
 });
 
