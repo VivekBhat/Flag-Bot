@@ -48,7 +48,12 @@ var bot = new SlackBot({
 
 var readyPromise = new Promise(function(resolve, reject){
     bot.on('start', function() {
+    //     var params = {
+    //     username: 'Buttons',
+    //     icon_emoji: ':unicorn_face:'
+    // };
         resolve();
+
     });
 });
 
@@ -214,6 +219,7 @@ function notify(msg) {
     });
 }
 
+
 function reply(data, msg)
 {
     var channel = getChannel(data.channel)
@@ -273,15 +279,11 @@ module.exports = {
     notify : notify
 }
 
-/*
 
 // =========BOT BUTTON=========
 var Botkit = require('botkit');
 
 // connect the bot to a stream of messages
-controller.spawn({
-  token: 'xoxb-92608187490-1D8dc3X5vPjn6LPbjZucNEGx',
-}).startRTM()
 
 var controller = Botkit.slackbot({
   debug: false
@@ -290,17 +292,25 @@ var controller = Botkit.slackbot({
 });
 
 
-controller.hears('delete',['mention', 'direct_mention'], function(bot,message) {
+controller.spawn({
+  token: 'xoxb-101499277473-zwmiBF1e1azyeXflzrOzbvpF',
+}).startRTM()
+
+
+controller.hears('deleted',['mention', 'direct_mention'], function(bot,message) {
 	bot.reply(message,msg);
 });
 
 
 var msg = 
 	{
-    "text": "Would you like to delete the feature?",
+    "text": "Would you like to integrate or delete the feature?",
+    "username": "ButtonBot",
+    "icon_emoji": ":unicorn_face:",
+            
     "attachments": [
-        {
-            "text": "Choose a game to play",
+        {  
+            "text": "Choose an option: ",
             "fallback": "You are unable to choose a game",
             "callback_id": "wopr_game",
             "color": "#3AA3E3",
@@ -308,25 +318,19 @@ var msg =
             "actions": [
                 {
                     "name": "chess",
-                    "text": "Chess",
+                    "text": "Integrate Feature",
                     "type": "button",
                     "value": "chess"
                 },
                 {
-                    "name": "maze",
-                    "text": "Falken's Maze",
-                    "type": "button",
-                    "value": "maze"
-                },
-                {
                     "name": "war",
-                    "text": "Thermonuclear War",
+                    "text": "Discard feature",
                     "style": "danger",
                     "type": "button",
                     "value": "war",
                     "confirm": {
                         "title": "Are you sure?",
-                        "text": "Wouldn't you prefer a good game of chess?",  //extra messages
+                        "text": "Wouldn't you prefer something else?",  //extra messages
                         "ok_text": "Yes",
                         "dismiss_text": "No"
                     }
@@ -335,5 +339,3 @@ var msg =
         }
     ]
 }
-
-*/
