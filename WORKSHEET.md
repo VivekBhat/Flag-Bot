@@ -15,21 +15,27 @@
 
 | Deliverable /Tasks   | Item/Status   |  Issues
 | ------------- | ------------  |  ------------
-| Log/ store Relevant Server POSTS related to on/off |  Complete| [Issue #4](../../issues/4)
+|Use Case 4 Task <ul><li>Log/ store Relevant Server POSTS related to on/off</li></ul> |  Complete| [Issue #4](../../issues/4)
 | Parser Code using the esprima tree| In Progress | [Issue #11](../../issues/11)
-|
+| **Use Case 2 Implementation** | Completed  | [Issue #2](../../issues/2)
+| **Use Case 3 Implementation**| Completed  | [Issue #3](../../issues/3)
 ##### Week 3 (Ends 11/3)- Iteration 2 (Service Milestone in Progress)
 
 | Deliverable /Tasks  | Item/Status   |  Issues
 | ------------- | ------------  |  ------------
-| Log/ store Relevant Server POSTS related to delete flag. Set timer| In progress | [Issue #6](../../issues/6)
-| Continue to work on Parser Code| In Progress | [Issue #11](../../issues/11), [Issue #7](../../issues/7), [Issue #8](../../issues/8)
+| Use Case 5 | Completed  | [Issue #5](../../issues/5)
+| Use Case 6 | Completed  | [Issue #6](../../issues/6)
+| Use Case 1 Task <ul> <li> Log relevant server POST messages related to delete flag</li></ul>| Complete| [Issue #1](../../issues/1), [Issue #6](../../issues/6)
+| Use Case 4  Task <ul><li>Set timer </li> | Completed | [Issue #4](../../issues/4)
+| Continue to work on Parser Code| In Progress | [Issue #11](../../issues/11) <ul><li> Dependencies <ul>  <li> [Issue #4](../../issues/4)</li> <li> [Issue #7](../../issues/7)</li> <li> [Issue #8](../../issues/8) </li> </ul> </li></ul>
 
-##### Week 4 (Ends 11/10) - Iteratipon 3 (Service Milestone Due) 
+##### Week 4 (Ends 11/10) - Iteration 3 (Service Milestone Due) 
 
 | Deliverable   | Item/Status   |  Issues/Tasks
 | ------------- | ------------  |  ------------
-| Use Case 1 | TBC | [Issue #1](../../issues/1)
-| Use Case 2 | TBC | [Issue #2](../../issues/2)
-| Use Case 3 | TBC | [Issue #3](../../issues/3)
-| Screencast | TODO| 
+| Use Case 1 Task - Button Response | Completed |  [Issue #1](../../issues/1)
+| Use Case 7 & 8 Task - `FileFinder.js` <ul><li> Identify all .js files and paths</li> <li> Call on parser.js on these files </li></ul>| Completed | [Issue #7](../../issues/7), [Issue #8](../../issues/8)
+| Keep working on Parser Code| In Progress | [Issue #11](../../issues/11) <ul><li> Dependencies <ul>  <li> [Issue #4](../../issues/4)</li> <li> [Issue #7](../../issues/7)</li> <li> [Issue #8](../../issues/8) </li> </ul> </li></ul>
+| **Use Case 1 Implementation** | Completed | [Issue #1](../../issues/1)
+| **SERVICE.md**  | Completed | Milestone Sdervice Requirement
+| **Screencast Service Milestone** | Completed | Milestone Service Requirement 
