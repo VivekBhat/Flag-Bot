@@ -321,7 +321,7 @@ var msg =
                     "value": "war",
                     "confirm": {
                         "title": "Are you sure?",
-                        "text": "Wouldn't you prefer a good game of chess?",  //extra messages
+                        "text": "Wouldn't you prefer something else?",  //extra messages
                         "ok_text": "Yes",
                         "dismiss_text": "No"
                     }
