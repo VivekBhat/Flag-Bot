@@ -130,7 +130,6 @@ function handlePost(postJSON) {
                 deleteFlag(flagKey);
                 slackbotReady.then(function(){   
                 slackbot.notify(flagKey + " has been deleted...");
-                // slackbot.postMessageToChannel(flagKey + " has been deleted...")
                 });
 
                 deleteFlagTimeout(flagKey);
