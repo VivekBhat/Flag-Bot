@@ -8,7 +8,7 @@ var launchDarklyLibrary = "ldclient-node";
 /** Assumptions that would mess us up **/
 //  * Library and client variables are in every file - could be imported somehow
 
-parseCode("test.js", "new-search-bar"); 
+//parseCode("test.js", "new-search-bar"); 
 
 /**************************************************/
 /* Public
