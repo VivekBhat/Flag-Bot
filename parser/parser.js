@@ -8,7 +8,7 @@ var launchDarklyLibrary = "ldclient-node";
 /** Assumptions that would mess us up **/
 //  * Library and client variables are in every file - could be imported somehow
 
-//parseCode("test.js", "new-search-bar"); 
+parseCode("test.js", "new-search-bar"); 
 
 /**************************************************/
 /* Public
@@ -50,8 +50,8 @@ function parseCode(filePath, featureKey, discardFeature) {
 		this.AST = esprima.parse(file); 
 
 
-		//this.libraryVarName = getLibraryVarName();
-		//this.clientVarName = getClientVarName();
+		this.libraryVarName = getLibraryVarName();
+		this.clientVarName = getClientVarName();
 
 		console.log(this.libraryVarName);
 		console.log(this.clientVarName);
@@ -59,12 +59,9 @@ function parseCode(filePath, featureKey, discardFeature) {
 		var featureCodeLeft = false; //Other feature flags are still here (used for removing library code
 		_.each(getClientOnceNodes(), function(onceNode) {
 			_.each(getClientVariationNodes(onceNode), function(variationNode) {
-				console.log(variationNode);
 				var featureName = variationNode.getFlagName();
 				if(featureName == featureKey) {
-					//Neeed to get flagBool somehow. For now, hardcode for testing
-					var flagBool = "showFeature"; //TODO!!!
-					//removeFlagCode(flagBool, variationNode, onceNode);
+					removeFlagCode(onceNode, variationNode, discardFeature);
 				} else {
 					featureCodeLeft = true;
 				}
@@ -78,6 +75,7 @@ function parseCode(filePath, featureKey, discardFeature) {
 	});
 }
 
+//TODO: doesn't currently save comments...
 function saveFile() {
 
 	var wstream = fs.createWriteStream('testModified.js'); //TODO: use filename
@@ -87,7 +85,7 @@ function saveFile() {
 
 function getLibraryVarName() {
 	libraryVarName = null;
-	var tempAST = this.AST;
+	var tempAST = JSON.parse(JSON.stringify(this.AST));
 	walk.walkAddParent(tempAST, function(node){
 		if(node.type == 'Literal' && node.value == launchDarklyLibrary) {
 			while(node.parent){
@@ -105,7 +103,7 @@ function getLibraryVarName() {
 function getClientVarName() {
 	clientVarName = null;
 	var that = this;
-	var tempAST = this.AST;
+	var tempAST = JSON.parse(JSON.stringify(this.AST));
 	walk.walkAddParent(tempAST, function(node){
 		if(node.object && node.object.name == that.libraryVarName 
 			&& node.property && node.property.name == "init") {
@@ -125,12 +123,10 @@ function getClientVarName() {
 function getClientOnceNodes() {
 	var onceNodes = [];
  	walk(this.AST, function(subNode) {
- 		//console.log(subNode);
  		if(isOnceNode(subNode, this.clientVarName)) { 
  			onceNodes.push(new OnceNode(subNode));
  		}
  	});
- 	console.log(onceNodes);
  	return onceNodes;
 }
 
@@ -171,27 +167,24 @@ function isVariationNode(node) {
 	}
 }
 
-function removeFlagCode(flagBool, variationNode, onceNode, discardFeature) {
-	walk(variationNode, function(subNode) {
-		// TODO: what if do !showFeature
-		if(subNode.type == "IfStatement" && subNode.test.name == flagBool) {
-			//Move contents of if outside of if
-			//Parser.attachBefore(subNode, Parser.toProgram(subNode.consequent.body));
-			var insideIf = Parser.toProgram(subNode);
-			//Parser.detach(subNode);
-			console.log(onceNode.range);
-			console.log(insideIf);
-			//Parser.injectCode(this.AST, onceNode.range, subNode);
-			//console.log(Parser.getCode(onceNode));
-			Parser.attachAfterComment(this.AST, "attachafterme", Parser.toProgram(subNode))
+// Assumes that you have code format if(showFeature) and else
+// TODO: support all code structures
+// TODO: handle case where more than one flag in once node
+function removeFlagCode(onceNode, variationNode, discardFeature) {
+	var flagBool = onceNode.getFlagBool();
+	walk(variationNode, function(node) {
+		if(node.type == "IfStatement" && node.test.name == flagBool) {
+			if(!discardFeature) {
+				//Move contents of if outside of if
+				console.log("Keeping inside if.");
+			} else {
+				//Move contents of if outside of if
+				console.log("Keeping inside else.");
+			}
 		}
 	});
 
-	//TODO: handle case where more than one flag in once node
 	var codeToKeep = variationNode.getCallbackContent();
-	//Parser.attachBefore(onceNode, Parser.toProgram(codeToKeep));
-	//Parser.detach(onceNode);
-	//Parser.attachBefore(onceNode, Parser.toProgram(onceNode));
 }
 
 function deleteLDCode() {
