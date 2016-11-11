@@ -325,7 +325,8 @@ function discardFeature(flagKey){
 /***************** Exports *******************/
 module.exports = {
     readyPromise : readyPromise,
-    notify : notify
+    notify : notify,
+    notify2 : notify2
 }
 
 
