@@ -129,7 +129,7 @@ function handlePost(postJSON) {
                 flagKey = post.previousVersion.key;
                 deleteFlag(flagKey);
                 slackbotReady.then(function(){   
-                slackbot.notify(flagKey + " has been deleted...");
+                slackbot.notify(flagKey + " has been deleted... @test");
                 });
 
                 deleteFlagTimeout(flagKey);
