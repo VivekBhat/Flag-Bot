@@ -47,4 +47,4 @@ Please see [WORKSHEET.md](https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/
 
 ##  Screencast [20%]
 **UC1, UC2 and UC3 Screencast**
-![ Screencast for the 3 use cases] (https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/screencast3.gif)
+![ Screencast for the 3 use cases] (https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/service_screencast.gif)
