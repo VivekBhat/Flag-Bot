@@ -128,8 +128,48 @@ function handlePost(postJSON) {
             case 'deleted flag':
                 flagKey = post.previousVersion.key;
                 deleteFlag(flagKey);
-                slackbotReady.then(function(){   
-                slackbot.notify(flagKey + " has been deleted...");
+                slackbotReady.then(function(){ 
+
+var msg = 
+	{
+    "text": flagkey + "has been deleted...",
+    "username": "ButtonBot",
+    "icon_emoji": ":unicorn_face:",
+            
+    "attachments": [
+        {  
+            "text": "Choose an option: ",
+            "fallback": "You are unable to choose a game",
+            "callback_id": "wopr_game",
+            "color": "#3AA3E3",
+            "attachment_type": "default",
+            "actions": [
+                {
+                    "name": "chess",
+                    "text": "Integrate Feature",
+                    "type": "button",
+                    "value": "chess"
+                },
+                {
+                    "name": "war",
+                    "text": "Discard feature",
+                    "style": "danger",
+                    "type": "button",
+                    "value": "war",
+                    "confirm": {
+                        "title": "Are you sure?",
+                        "text": "Wouldn't you prefer something else?",  //extra messages
+                        "ok_text": "Yes",
+                        "dismiss_text": "No"
+                    }
+                }
+            ]
+        }
+    ]
+}
+
+
+                slackbot.notify(msg);
                 });
 
                 deleteFlagTimeout(flagKey);
