@@ -279,15 +279,16 @@ module.exports = {
 var Botkit = require('botkit');
 
 // connect the bot to a stream of messages
-controller.spawn({
-  token: 'xoxb-101499277473-zwmiBF1e1azyeXflzrOzbvpF',
-}).startRTM()
 
 var controller = Botkit.slackbot({
   debug: false
   //include "log: false" to disable logging
   //or a "logLevel" integer from 0 to 7 to adjust logging verbosity
 });
+
+controller.spawn({
+  token: 'xoxb-101499277473-zwmiBF1e1azyeXflzrOzbvpF',
+}).startRTM()
 
 
 controller.hears('deleted',['mention', 'direct_mention'], function(bot,message) {
