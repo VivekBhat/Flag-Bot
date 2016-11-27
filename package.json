@@ -33,6 +33,7 @@
     "esprima": "~1.0.4",
     "esprima-ast-utils": "^0.0.6",
     "esprima-walk": "^0.1.0",
+    "estraverse": "^4.2.0",
     "etag": "^1.7.0",
     "finalhandler": "^0.5.0",
     "fresh": "^0.3.0",

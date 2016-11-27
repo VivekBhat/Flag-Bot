@@ -3,12 +3,13 @@ var fs = require("fs");
 var esprima = require("esprima");
 var walk = require("esprima-walk");
 var escodegen = require("escodegen")
+var estraverse = require('estraverse');
 var launchDarklyLibrary = "ldclient-node";
 
 /** Assumptions that would mess us up **/
 //  * Library and client variables are in every file - could be imported somehow
 
-//parseCode("test.js", "new-search-bar"); 
+parseCode("test.js", "new-search-bar"); 
 
 /**************************************************/
 /* Public
@@ -48,13 +49,8 @@ function parseCode(filePath, featureKey, discardFeature) {
  		if (err) throw err;
 
 		this.AST = esprima.parse(file); 
-
-
 		this.libraryVarName = getLibraryVarName();
 		this.clientVarName = getClientVarName();
-
-		console.log(this.libraryVarName);
-		console.log(this.clientVarName);
 
 		var featureCodeLeft = false; //Other feature flags are still here (used for removing library code
 		_.each(getClientOnceNodes(), function(onceNode) {
@@ -77,7 +73,6 @@ function parseCode(filePath, featureKey, discardFeature) {
 
 //TODO: doesn't currently save comments...
 function saveFile() {
-
 	var wstream = fs.createWriteStream('testModified.js'); //TODO: use filename
 	wstream.write(escodegen.generate(this.AST));
 	wstream.end();
@@ -133,11 +128,19 @@ function getClientOnceNodes() {
 // Gets feature flag layer of all feature flag code (client.variation)
 function getClientVariationNodes(onceNode) {
 	var variationNodes = [];
- 	walk(onceNode, function(subNode) {
+ 	/*walk(onceNode, function(subNode) {
  		if(isVariationNode(subNode, this.clientVarName)) { 
  			variationNodes.push(new VariationNode(subNode));
  		}
- 	}.bind(this));
+ 	}.bind(this));*/
+
+ 	estraverse.traverse(onceNode, {
+		enter: function (subNode) {
+			if(isVariationNode(subNode, this.clientVarName)) { 
+	 			variationNodes.push(new VariationNode(subNode));
+	 		}
+		}
+	});
  	return variationNodes;
 }
 
@@ -171,21 +174,21 @@ function isVariationNode(node) {
 // TODO: support all code structures
 // TODO: handle case where more than one flag in once node
 function removeFlagCode(onceNode, variationNode, discardFeature) {
+	var that = this;
 	var flagBool = onceNode.getFlagBool();
 	walk(variationNode, function(node) {
 		if(node.type == "IfStatement" && node.test.name == flagBool) {
 			if(!discardFeature) {
 				//Move contents of if outside of if
-				console.log("Keeping inside if.");
+				variationNode.replaceWithNewFeature(that.AST);
 			} else {
 				//Move contents of if outside of if
-				console.log("Keeping inside else.");
+				variationNode.replaceWithOldFeature(that.AST);
 			}
 		}
 	});
 
-	var codeToKeep = variationNode.getCallbackContent();
-}
+	var codeToKeep = variationNode.getCallbackContent();}
 
 function deleteLDCode() {
 	//TODO
@@ -198,6 +201,13 @@ function OnceNode(node) {
 	//TODO
 	node.getFlagBool = function(){
 		return "showFeature";
+		var flagBool = null;
+	 	walk(node, function(subNode) {
+	 		if(subNode) {
+	 			//todo
+	 		}
+	 	}.bind(this));
+	 	return flagbool;
 	}	
 
 	return node;
@@ -210,8 +220,47 @@ function VariationNode(node) {
 	}
 
 	node.getCallbackContent = function(){
-		return node.expression.arguments[3].body;
+		//return node.expression.arguments[3].body.body;
+		var functionContent = null;
+		estraverse.traverse(node, {
+			enter: function (innerNode) {
+				if(innerNode.type == "FunctionExpression"){
+					estraverse.traverse(innerNode, {
+						enter: function (innerInnerNode) {
+							if(innerInnerNode.type == "BlockStatement"){
+								if( functionContent == null) { // Want first function
+									functionContent = innerInnerNode;
+								}
+							}
+						}
+					});
+				}
+			}
+		});
+		return functionContent;
 	}
+
+	node.replaceWithOldFeature = function(ast){
+		node.replace(ast, false);
+	}
+
+	node.replaceWithNewFeature = function(ast) {
+		node.replace(ast, true);
+	}
+
+	node.replace = function(ast, keepFeature){
+		estraverse.replace(ast, {
+			enter: function (innerNode) {
+				if(_.isEqual(node,innerNode)){
+					//return this.remove();
+					return node.getCallbackContent();
+				}
+			}
+		});
+	}
+
 
 	return node;
 }
+
+
