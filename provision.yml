@@ -20,36 +20,38 @@
           to_port: 80
           cidr_ip: 0.0.0.0/0  
 
-  - name: Create ec2 instance
+    - name: Create ec2 instance
     ec2: 
-     aws_access_key: {access_key}
-     aws_secret_key: {secret_key}
-     key_name: bonus
+     aws_access_key: AKIAITSZSL57S64MZSLQ
+     aws_secret_key: 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
+     key_name: featureBot
      instance_type: t2.micro
      region: us-east-1
      image: ami-c8580bdf
      wait: yes
      group: webserver
-     vpc_subnet_id: subnet-5d92d677
+     vpc_subnet_id: subnet-0dd85455
      assign_public_ip: yes
      wait_timeout: 600
      count: 1
      instance_tags:
-      Name: "bonus"
+      Name: "featureBot"
     register: ec2_instances
+
 
   - name: Add host to in-memory inventory
     add_host:
      hostname: "{{ec2_instances.instances[0].public_ip}}"
      groupname: ec2_instance
      ansible_ssh_user: ubuntu
-     ansible_ssh_private_key_file: ./bonus.pem
+     ansible_ssh_private_key_file: ./featureBot.pem
 
   - name: Wait for port 22
     wait_for: 
      host: "{{ec2_instances.instances[0].public_ip}}"
      port: 22 
      state: started
+
 
 - name: Setup
   hosts: ec2_instance
@@ -81,6 +83,7 @@
    - name: Install npm packages 
      npm:
       path: "{{home_dir}}/{{app_dir}}"
+     
      
 - name: Tasks 
   hosts: ec2_instance
