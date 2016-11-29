@@ -93,7 +93,7 @@
 
   tasks:
    - name: Run webserver
-     command: node "{{home_dir}}/{{app_dir}}/server.js" 40676
+     command: node "{{home_dir}}/{{app_dir}}/server/server.js" 40676
 
    - name: Print All EC2 variables
      debug: var=ec2_instance
