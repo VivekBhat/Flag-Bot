@@ -286,6 +286,54 @@ function getFlag(flagKey, callback) {
     });
 }
 
+// Retrieves the specified flag from launchdarkly & returns it in slackbot JSON format of relevant info
+function createWebhook(serverIP) {
+    var options = {
+      url: URLROOT + 'webhooks',
+      method: 'POST',
+      headers: {
+        "content-type": "application/json",
+        "Authorization": TOKEN
+      },
+      body: JSON.stringify({
+        "url": "http://ec2-35-164-239-118.us-west-2.compute.amazonaws.com/", //"http://" + serverIP + ":" + PORT,
+        "sign": true,
+        "on": true
+      })
+    };
+
+    // Send a http request to url and specify a callback that will be called upon its return.
+    request(options, function (error, response, body) 
+    {
+      if (error) {
+        console.log("Post error: ", error);
+      } else {
+        //var obj = JSON.parse(body);
+        //console.log("response: ", response);
+        console.log("Create:\n", body);
+      }
+    });
+}
+
+function getIP() {
+    var options = {
+    url: "http://ifconfig.co/json",
+    method: 'GET',
+  };
+
+  // Send a http request to url and specify a callback that will be called upon its return.
+  request(options, function (error, response, body) 
+  {
+    if (error) {
+      console.log("Get IP error: ", error);
+    } else {
+      var obj = JSON.parse(body);
+      console.log("IP: ", obj.ip);
+      createWebhook(obj.ip);
+    }
+  }); 
+}
+
 /*================================================
  * Timer functions
  *================================================*/
@@ -347,6 +395,7 @@ function serverInit() {
     // Lets ensure that our flag state file is up-to-date
     getAllFlags();
 
+    getIP();    //creates the webhook
 
     //Lets create the server
     var server = http.createServer(handleRequest);
