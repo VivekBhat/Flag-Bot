@@ -51,7 +51,6 @@
      apt: name={{ item }} update_cache=yes state=latest
      with_items:
        - build-essential
-       - npm
        - git
 
    - name: Install npm
