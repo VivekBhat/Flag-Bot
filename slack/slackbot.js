@@ -1,309 +1,16 @@
 var _ = require('underscore');
-var SlackBot = require('slackbots');
 var LDAccess = require("../common/launchDarkly");
 var Parser = require("../parser/parser");
-
-var notificationChannels = ["C2QHSD89J", "C2SA5Q458"];
-var sendAsUser = false;
-
-//TESTING!
-/**************************************************************************/ 
-var testing = false;
-if(testing) {
-    var nock = require('nock');
-    var fs = require('fs');
-    var mockData = JSON.parse(fs.readFileSync(__dirname + '/../common/mockdata.json', 'utf8'));
-
-    //MOCK SERVICES
-    var listFlags = nock("https://app.launchdarkly.com").persist()
-    .get("/api/v2/flags/default")
-    .reply(200, JSON.stringify(mockData.listFlags) );
-
-    var createFlag = nock("https://app.launchdarkly.com").persist()
-    .post("/api/v2/flags/default")
-    .reply(201, JSON.stringify(mockData.createFlag) );
-
-    var deleteFlag = nock("https://app.launchdarkly.com").persist()
-    .filteringPath(function(path) {
-       return "/api/v2/flags/default";
-     })
-    .delete("/api/v2/flags/default")
-    .reply(200, JSON.stringify(mockData.deleteFlag) );
-
-    var turnOnOffFlag = nock("https://app.launchdarkly.com").persist()
-    .filteringPath(function(path) {
-       return "/api/v2/flags/default";
-     })
-    .patch("/api/v2/flags/default")
-    .reply(200);
-}
-/**************************************************************************/ 
-
-// create a bot 
-var bot = new SlackBot({
-    // Add a bot https://my.slack.com/services/new/bot and put the token  
-    token: "xoxb-92608187490-1D8dc3X5vPjn6LPbjZucNEGx", 
-    name: 'FlagLag Bot'
-});
-
-var readyPromise = new Promise(function(resolve, reject){
-    bot.on('start', function() {
-    //     var params = {
-    //     username: 'Buttons',
-    //     icon_emoji: ':unicorn_face:'
-    // };
-        resolve();
-
-    });
-});
-
-readyPromise.then(function(){
-    console.log("Bot is ready!");
-    //notify(getCommands());
-});
-
-var commands = [
-"list flags",
-"create flag",
-"delete flag",
-"turn on flag",
-"turn off flag",
-"integrate feature",
-"discard feature"
-];
-
-function getCommands() {
-    var commandsMessage = "Here are your options. To see them again, type 'help'.\n\n";
-    commandsMessage += "To see all of your LaunchDarkly flags, type \'list flags\'.\n";
-    commandsMessage += "To create a LaunchDarkly flag, type \'create flag <flag-key>\'.\n";
-    commandsMessage += "To delete a LaunchDarkly flag, type \'delete flag <flag-key>\'.\n";
-
-    commandsMessage += "To turn on LaunchDarkly flag, type \'turn on flag <flag-key>\'.\n";
-    commandsMessage += "To turn off LaunchDarkly flag, type \'turn off flag <flag-key>\'.\n";
-
-    commandsMessage += "To integrate a feature in your code, type \'integrate feature <flag-key>\'.\n";
-    commandsMessage += "To discard a feature in your code, type \'discard feature <flag-key>\'.\n";
-    return commandsMessage;
-}
-
-bot.on('message', function(data) {
-    // all ingoing events https://api.slack.com/rtm 
-    // Check that it is a message type, not a bot, and the user is not the bot
-    if( data.type == 'message' && data.user && getUser(data.user).name != bot.name )
-    {
-        var message = data.text;
-
-        // TODO: bot not working in the channel.
-        // not a direct message so must mention bot
-        if(getChannel(data.channel)) { 
-            var botMention = "<@" + bot.self.id + ">";
-            //not talking to the bot
-            if (!message.includes(botMention)) { 
-                return;
-            } else {
-                // Strip out mention, left with command
-                message = message.replace(botMention,""); 
-            }
-        }
-
-        // Find command in list and pull out argument
-        //TODO does not ensure there is space after command
-        var command;
-        var argument;
-        _.each(commands, function(commandStr) {
-            if(message.includes(commandStr)) {
-                command = commandStr;
-                // +1 accounts for space after command
-                var commandStart = message.toLowerCase().indexOf(command + " ");
-                if(commandStart != -1) {
-                    var argStart =  commandStart + command.length + 1;
-                    argument = message.substr(argStart).toLowerCase().trim();
-                }
-            }
-        });
-
-        switch(command) {
-
-            case 'list flags':
-                LDAccess.getFlags(function(flagArray) {
-                    if(flagArray.length == 0) {
-                        reply(data, "No flags were found.")
-                    } else {
-                        var botReply = "Your feature flags:\n";
-                        _.each(flagArray,function(flag){
-                            botReply += flag + "\n";
-                        });
-                        reply(data, botReply);
-                    }
-                });
-                break;
-
-            case 'create flag':
-                if(argument) {
-                    if(argument.split(" ").length > 1) {
-                        reply(data, "Your flag key cannot have spaces.");
-                        break;
-                    }
-                    LDAccess.createFlag(argument, function(successful) {
-                         //console.log("attempt made? \n")
-                        var botReply = "Your flag ("+ argument +") was created!\n";
-                        if(!successful) {
-                            //console.log("Got up to here \n");
-                            botReply = "Sorry, there was a problem creating your flag.\n"
-                        }
-                        reply(data, botReply);
-                    });
-                } else {
-                    reply(data, "Please provide an argument.");
-                }
-                break;
-
-            case 'delete flag':
-                if(argument) {
-                    LDAccess.deleteFlag(argument, function(successful) {
-                        var botReply = "Your flag ("+ argument +") was deleted!\n";
-                        if(!successful) {
-                            botReply = "Sorry, there was a problem deleting your flag. Make sure the key provided exists.\n"
-                        }
-                        reply(data, botReply);
-                    });
-                } else {
-                    reply(data, "Please provide an argument.");
-                }
-                break;
-
-            case 'turn on flag':
-                LDAccess.turnOnFlag(argument, function(successful) {
-                    if(successful) {
-                        reply(data, "Success! Your feature flag was turned on.");
-                    } else {
-                         reply(data, "Sorry, there was a problem turning your flag on.");
-                    }
-                });
-                break;
-
-            case 'turn off flag':
-                LDAccess.turnOffFlag(argument, function(successful) {
-                    if(successful) {
-                        reply(data, "Success! Your feature flag was turned off.");
-                    } else {
-                         reply(data, "Sorry, there was a problem turning your flag off");
-                    }
-                });
-                break;
-
-            case 'integrate feature':
-                integrateFeature(argument);                
-                break;
-
-            case 'discard feature':
-                discardFeature(argument);
-                break;
-
-            default :
-                reply(data,getCommands());
-        }
-    }
-});
-
-//Posts message to notificationChannels array defined at top
-function notify(msg) {
-    bot.getChannels().then(function(){
-        _.each(notificationChannels, function(channelId) {
-            var channel = getChannel(channelId);
-            if( channel ) 
-            {
-                bot.postMessageToChannel(channel.name, msg, {as_user: sendAsUser});    
-            }
-        });
-    });
-}
-
-
-function reply(data, msg)
-{
-    var channel = getChannel(data.channel)
-    if( channel )
-    {
-        //console.log( "replying in channel ")
-        bot.postMessageToChannel(channel.name, msg, {as_user: sendAsUser});    
-    }
-    else
-    {
-        var user = getUser(data.user)
-        bot.postMessageToUser(user.name, msg, {as_user: sendAsUser} );
-    }
-}
-
-function getChannel(channelId)
-{
-    return bot.channels.filter(function (item) 
-    {
-        return item.id === channelId;
-    })[0];
-}
-
-function getUser(userId)
-{
-    return bot.users.filter(function (item) 
-    {
-        return item.id === userId;
-    })[0];
-}
-
-/***************** Bot Actions *******************/
-
-function integrateFeature(flagKey){
-    var flagDeletedPromise = Parser.deleteFeatureFlag(flagKey);
-    flagDeletedPromise.then( function(val) {
-        reply(data, "Success! Your feature was integreted into your code.");
-    })
-    .catch( function(err) {
-        reply(data, "Sorry, there was a problem integrating your feature.");
-    });
-}
-
-function discardFeature(flagKey){
-    var flagDeletedPromise = Parser.deleteFeatureFlag(flagKey, true);
-    flagDeletedPromise.then( function(val) {
-        reply(data, "Success! Your feature was discarded from your code.");
-    })
-    .catch( function(err) {
-        reply(data, "Sorry, there was a problem discarding your feature.");
-    });
-}
-
-/***************** Exports *******************/
-module.exports = {
-    readyPromise : readyPromise,
-    notify : notify
-}
-
-
-// =========BOT BUTTON=========
 var Botkit = require('botkit');
+var request = require('request');
 
-// connect the bot to a stream of messages
+var TOKEN = 'xoxb-92608187490-QQjz4ew9SYvBuNVjT0lQ6MAE';
+var notificationChannels = ["featureflags", "demo"];
+var sendAsUser = false;
+var botName = "flaglagbot";
 
-var controller = Botkit.slackbot({
-  debug: false
-  //include "log: false" to disable logging
-  //or a "logLevel" integer from 0 to 7 to adjust logging verbosity
-});
-
-
-controller.spawn({
-  token: 'xoxb-101499277473-zwmiBF1e1azyeXflzrOzbvpF',
-}).startRTM()
-
-
-controller.hears('deleted',['mention', 'direct_mention'], function(bot,message) {
-	bot.reply(message,msg);
-});
-
-
-var msg = 
-	{
+var buttonMsg = 
+    {
     "text": "Would you like to integrate or delete the feature?",
     "username": "ButtonBot",
     "icon_emoji": ":unicorn_face:",
@@ -339,3 +46,250 @@ var msg =
         }
     ]
 }
+
+//TESTING!
+/**************************************************************************/ 
+var testing = false;
+if(testing) {
+    var nock = require('nock');
+    var fs = require('fs');
+    var mockData = JSON.parse(fs.readFileSync(__dirname + '/../common/mockdata.json', 'utf8'));
+
+    //MOCK SERVICES
+    var listFlags = nock("https://app.launchdarkly.com").persist()
+    .get("/api/v2/flags/default")
+    .reply(200, JSON.stringify(mockData.listFlags) );
+
+    var createFlag = nock("https://app.launchdarkly.com").persist()
+    .post("/api/v2/flags/default")
+    .reply(201, JSON.stringify(mockData.createFlag) );
+
+    var deleteFlag = nock("https://app.launchdarkly.com").persist()
+    .filteringPath(function(path) {
+       return "/api/v2/flags/default";
+     })
+    .delete("/api/v2/flags/default")
+    .reply(200, JSON.stringify(mockData.deleteFlag) );
+
+    var turnOnOffFlag = nock("https://app.launchdarkly.com").persist()
+    .filteringPath(function(path) {
+       return "/api/v2/flags/default";
+     })
+    .patch("/api/v2/flags/default")
+    .reply(200);
+}
+/**************************************************************************/ 
+
+var controller = Botkit.slackbot({
+  debug: false
+});
+
+var readyPromise = new Promise(function(resolve, reject){
+    console.log("promising...");
+    controller.spawn({
+      token: TOKEN,
+      name: botName
+    }).startRTM(function(err) {
+        resolve();
+    });
+});
+
+readyPromise.then(function(){
+    console.log("Bot is ready!");
+    //notify(getCommands());
+    notify(buttonMsg);
+});
+
+controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
+  bot.reply(message,'Hello yourself.');
+});
+
+/*controller.hears('list flags',['direct_message','direct_mention','mention'],function(bot,message) {
+    //bot.reply(message,'Hello yourself.');
+    LDAccess.getFlags(function(flagArray) {
+        if(flagArray.length == 0) {
+            bot.reply(message, {text:"No flags were found."});
+        } else {
+            var botReply = "Your feature flags:\n";
+            _.each(flagArray,function(flag){
+                botReply += flag + "\n";
+            });
+            bot.reply(message, {text:botReply});
+        }
+    });
+});*/
+
+var commands = [
+"list flags",
+"create flag",
+"delete flag",
+"turn on flag",
+"turn off flag",
+"integrate feature",
+"discard feature"
+];
+
+function getCommands() {
+    var commandsMessage = "Here are your options. To see them again, type 'help'.\n\n";
+    commandsMessage += "To see all of your LaunchDarkly flags, type \'list flags\'.\n";
+    commandsMessage += "To create a LaunchDarkly flag, type \'create flag <flag-key>\'.\n";
+    commandsMessage += "To delete a LaunchDarkly flag, type \'delete flag <flag-key>\'.\n";
+
+    commandsMessage += "To turn on LaunchDarkly flag, type \'turn on flag <flag-key>\'.\n";
+    commandsMessage += "To turn off LaunchDarkly flag, type \'turn off flag <flag-key>\'.\n";
+
+    commandsMessage += "To integrate a feature in your code, type \'integrate feature <flag-key>\'.\n";
+    commandsMessage += "To discard a feature in your code, type \'discard feature <flag-key>\'.\n";
+    return commandsMessage;
+}
+
+controller.on(['direct_message','direct_mention','mention'], function(bot, data) {
+
+    // all ingoing events https://api.slack.com/rtm 
+    // Check that it is a message type, not a bot, and the user is not the bot
+        var message = data.text;
+
+        // Find command in list and pull out argument
+        //TODO does not ensure there is space after command
+        var command;
+        var argument;
+        _.each(commands, function(commandStr) {
+            if(message.includes(commandStr)) {
+                command = commandStr;
+                // +1 accounts for space after command
+                var commandStart = message.toLowerCase().indexOf(command + " ");
+                if(commandStart != -1) {
+                    var argStart =  commandStart + command.length + 1;
+                    argument = message.substr(argStart).toLowerCase().trim();
+                }
+            }
+        });
+
+        switch(command) {
+
+            case 'list flags':
+                LDAccess.getFlags(function(flagArray) {
+                    if(flagArray.length == 0) {
+                        bot.reply(data, {text:"No flags were found."});
+                    } else {
+                        var botReply = "Your feature flags:\n";
+                        _.each(flagArray,function(flag){
+                            botReply += flag + "\n";
+                        });
+                        bot.reply(data, {text:botReply});
+                    }
+                });
+                break;
+
+            case 'create flag':
+                if(argument) {
+                    if(argument.split(" ").length > 1) {
+                        bot.reply(data, {text:"Your flag key cannot have spaces."});
+                        break;
+                    }
+                    LDAccess.createFlag(argument, function(successful) {
+                         //console.log("attempt made? \n")
+                        var botReply = "Your flag ("+ argument +") was created!\n";
+                        if(!successful) {
+                            //console.log("Got up to here \n");
+                            botReply = "Sorry, there was a problem creating your flag.\n"
+                        }
+                        bot.reply(data, {text:botReply});
+                    });
+                } else {
+                    bot.reply(data, {text:"Please provide an argument."});
+                }
+                break;
+
+            case 'delete flag':
+                if(argument) {
+                    LDAccess.deleteFlag(argument, function(successful) {
+                        var botReply = "Your flag ("+ argument +") was deleted!\n";
+                        if(!successful) {
+                            botReply = "Sorry, there was a problem deleting your flag. Make sure the key provided exists.\n"
+                        }
+                        bot.reply(data, {text:botReply});
+                    });
+                } else {
+                    bot.reply(data, {text:"Please provide an argument."});
+                }
+                break;
+
+            case 'turn on flag':
+                LDAccess.turnOnFlag(argument, function(successful) {
+                    if(successful) {
+                        bot.reply(data, {text:"Success! Your feature flag was turned on."});
+                    } else {
+                        bot.reply(data, {text:"Sorry, there was a problem turning your flag on."});
+                    }
+                });
+                break;
+
+            case 'turn off flag':
+                LDAccess.turnOffFlag(argument, function(successful) {
+                    if(successful) {
+                        bot.reply(data, {text: "Success! Your feature flag was turned off."});
+                    } else {
+                        bot.reply(data, {text:"Sorry, there was a problem turning your flag off"});
+                    }
+                });
+                break;
+
+            case 'integrate feature':
+                var flagDeletedPromise = Parser.deleteFeatureFlag(argument, false);
+                flagDeletedPromise.then( function(val) {
+                    bot.reply(data, {text: "Success! Your feature was integreted into your code."});
+                })
+                .catch( function(err) {
+                    bot.reply(data, {text:"Sorry, there was a problem integrating your feature."});
+                })               
+                break;
+
+            case 'discard feature':
+                var flagDeletedPromise = Parser.deleteFeatureFlag(argument, true);
+                flagDeletedPromise.then( function(val) {
+                    bot.reply(data, {text: "Success! Your feature was discarded from your code."});
+                })
+                .catch( function(err) {
+                    bot.reply(data, {text: "Sorry, there was a problem discarding your feature."});
+                });
+                break;
+
+            default :
+                bot.reply(data,{text:getCommands()});
+        }
+});
+
+//Posts message to notificationChannels array defined at top
+function notify(msg) {
+    for(var cha in notificationChannels) {
+        var options = {
+            url: 'https://slack.com/api/chat.postMessage' + 
+                '?token=' + TOKEN +
+                '&channel=' + notificationChannels[cha] + 
+                '&text=' + JSON.stringify(msg),
+            method: 'GET',
+            headers: {
+            "content-type": "application/json"
+            },
+        };
+
+        // Send a http request to url and specify a callback that will be called upon its return.
+        request(options, function (error, response, body) 
+        {
+            if(error) {
+                console.log(error);
+            }
+            console.log(body);        
+        });
+    }
+}
+
+/***************** Exports *******************/
+module.exports = {
+    readyPromise : readyPromise,
+    notify : notify
+}
+
+
+

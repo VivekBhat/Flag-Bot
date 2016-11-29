@@ -9,7 +9,7 @@ var launchDarklyLibrary = "ldclient-node";
 /** Assumptions that would mess us up **/
 //  * Library and client variables are in every file - could be imported somehow
 
-parseCode("test.js", "new-search-bar"); 
+//parseCode("test.js", "new-search-bar", false); 
 
 /**************************************************/
 /* Public
@@ -177,6 +177,7 @@ function removeFlagCode(onceNode, variationNode, discardFeature) {
 	var that = this;
 	var flagBool = onceNode.getFlagBool();
 	walk(variationNode, function(node) {
+		//TODO: REMOVE!! Not necessary anymore
 		if(node.type == "IfStatement" && node.test.name == flagBool) {
 			if(!discardFeature) {
 				//Move contents of if outside of if
@@ -219,6 +220,22 @@ function VariationNode(node) {
 		return node.expression.arguments[0].value;
 	}
 
+	node.getFlagBool = function(){
+		var flagBool = null;
+		var foundFirst = false;
+		estraverse.traverse(node, {
+			enter: function (innerNode) {
+				if(innerNode.type == "FunctionExpression"){
+					if(!foundFirst) {
+						flagBool = innerNode.params[1].name;
+					}						
+					foundFirst = true;
+				}
+			}
+		});
+		return flagBool;
+	}
+
 	node.getCallbackContent = function(){
 		//return node.expression.arguments[3].body.body;
 		var functionContent = null;
@@ -248,11 +265,43 @@ function VariationNode(node) {
 		node.replace(ast, true);
 	}
 
+	//TODO: only supports if(featureBool) (not !featureBool or other variations)
+	node.getNewFeatureCode = function() {
+		var newFeatureNodes = [];
+		estraverse.traverse(node.getCallbackContent(), {
+			enter: function(innerNode) {
+				if(innerNode.type == "IfStatement" && innerNode.test.name == node.getFlagBool()) {
+					newFeatureNodes.push(innerNode.consequent);
+				}
+			}
+		});
+		return newFeatureNodes;
+	}
+
+	node.getOldCode = function() {
+		var oldNodes = [];
+		estraverse.traverse(node.getCallbackContent(), {
+			enter: function(innerNode) {
+				if(innerNode.type == "IfStatement" && innerNode.test.name == node.getFlagBool()) {
+					oldNodes.push(innerNode.alternate);
+				}
+			}
+		});
+		return oldNodes;
+	}
+
 	node.replace = function(ast, keepFeature){
 		estraverse.replace(ast, {
 			enter: function (innerNode) {
 				if(_.isEqual(node,innerNode)){
 					//return this.remove();
+					var codeToKeep = [];
+					if(keepFeature) {
+						codeToKeep = node.getNewFeatureCode();
+					} else {
+						codeToKeep = node.getOldCode();
+					}
+					node.expression.arguments[3].body.body = codeToKeep;
 					return node.getCallbackContent();
 				}
 			}
