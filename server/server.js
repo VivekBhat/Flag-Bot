@@ -206,11 +206,16 @@ function updateFlagState(flagJSON) {
 
 // Gets the flags and their states from the flag state file
 function loadFlagStates(callback) {    
-    return fs.readFile(flagStateFileName, 'utf8', (err, data) => {
+    fs.readFile(flagStateFileName, 'utf8', (err, data) => {
         if(err) {
-            console.log("Error: " + err.stack);
-        }
-        callback(data);
+            fs.writeFile(flagStateFileName, '', function(err) {
+                if(err) {
+                    console.log("Error the file was not able to be created: ", err.stack);
+                }
+            });
+            console.log("The file was created!");
+            callback("");
+        } else callback(data);
     });
 }
 
