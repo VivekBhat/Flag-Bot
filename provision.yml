@@ -1,4 +1,4 @@
-- name: Provision
+- name: FlagLagBot Provision
   hosts: localhost
   connection: local
   tasks:
@@ -52,18 +52,14 @@
      with_items:
        - build-essential
        - npm
-       - nodejs-legacy
+       - nodejs
        - git
-
-   - name: Install forever
-     npm: name={{ item }} global=yes state=present
-     with_items:
-       - forever
 
    - name: Clone git repo 
      git: 
-      repo: https://github.com/CSC-DevOps/App.git 
+      repo: https://github.ncsu.edu/kebrey/FlagLagBot.git 
       dest: "{{home_dir}}/{{app_dir}}"
+      clone: yes
      register: git_cloned
 
    - name: Install npm packages 
@@ -81,22 +77,5 @@
 
   tasks:
    - name: Run webserver
-     command: forever start "{{home_dir}}/{{app_dir}}/main.js" 8000
-     
-   - name: Security
-     apt: name={{ item }} state=latest
-     with_items:
-      - bash
-      - openssl
-      - openssh-client
-      - openssh-server
+     command: node "{{home_dir}}/{{app_dir}}/server.js" 40676
 
-   - shell: ls -1 "{{temp_dir}}"
-     register: contents
-
-   - name: Cleanup
-     file: 
-      path: "{{ temp_dir }}{{ item }}" 
-      state: absent
-     with_items:
-       - "{{ contents.stdout_lines}}"
