@@ -6,6 +6,20 @@
     sudo: yes
     pip: name=boto
 
+  - name: create ec2 group
+    ec2_group:
+      name: webserver
+      description: an EC2 webserver group
+      region: us-east-1
+      aws_access_key: {access_key}
+      aws_secret_key: {secret_key}
+      state: present
+      rules:
+        - proto: tcp
+          from_port: 80
+          to_port: 80
+          cidr_ip: 0.0.0.0/0  
+
   - name: Create ec2 instance
     ec2: 
      aws_access_key: {access_key}
@@ -15,7 +29,7 @@
      region: us-east-1
      image: ami-c8580bdf
      wait: yes
-     group_id: sg-3c29a841
+     group: webserver
      vpc_subnet_id: subnet-5d92d677
      assign_public_ip: yes
      wait_timeout: 600
