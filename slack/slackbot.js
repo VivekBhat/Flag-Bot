@@ -1,6 +1,6 @@
 var _ = require('underscore');
 var LDAccess = require("../common/launchDarkly");
-var Parser = require("../parser/parser");
+var FileFinder = require("../parser/filefinder");
 var Botkit = require('botkit');
 var request = require('request');
 
@@ -11,10 +11,6 @@ var botName = "flaglagbot";
 
 var buttonMsg = 
     {
-    "text": "Would you like to integrate or delete the feature?",
-    "username": "ButtonBot",
-    "icon_emoji": ":unicorn_face:",
-            
     "attachments": [
         {  
             "text": "Choose an option: ",
@@ -96,27 +92,15 @@ var readyPromise = new Promise(function(resolve, reject){
 
 readyPromise.then(function(){
     console.log("Bot is ready!");
-    //notify(getCommands());
-    notify(buttonMsg);
+    notify(getCommands());
 });
 
-controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
+/*controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
   bot.reply(message,'Hello yourself.');
-});
-
-/*controller.hears('list flags',['direct_message','direct_mention','mention'],function(bot,message) {
-    //bot.reply(message,'Hello yourself.');
-    LDAccess.getFlags(function(flagArray) {
-        if(flagArray.length == 0) {
-            bot.reply(message, {text:"No flags were found."});
-        } else {
-            var botReply = "Your feature flags:\n";
-            _.each(flagArray,function(flag){
-                botReply += flag + "\n";
-            });
-            bot.reply(message, {text:botReply});
-        }
-    });
+  bot.say({
+    channel:"featureflags",
+    attachments:buttonMsg.attachments
+  })
 });*/
 
 var commands = [
@@ -149,8 +133,8 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
     // Check that it is a message type, not a bot, and the user is not the bot
         var message = data.text;
 
-        // Find command in list and pull out argument
-        //TODO does not ensure there is space after command
+        // Finds command in list and pull out argument
+        //TODO test edge cases
         var command;
         var argument;
         _.each(commands, function(commandStr) {
@@ -236,7 +220,7 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
                 break;
 
             case 'integrate feature':
-                var flagDeletedPromise = Parser.deleteFeatureFlag(argument, false);
+                var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, false);
                 flagDeletedPromise.then( function(val) {
                     bot.reply(data, {text: "Success! Your feature was integreted into your code."});
                 })
@@ -246,7 +230,7 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
                 break;
 
             case 'discard feature':
-                var flagDeletedPromise = Parser.deleteFeatureFlag(argument, true);
+                var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, true);
                 flagDeletedPromise.then( function(val) {
                     bot.reply(data, {text: "Success! Your feature was discarded from your code."});
                 })
@@ -267,7 +251,7 @@ function notify(msg) {
             url: 'https://slack.com/api/chat.postMessage' + 
                 '?token=' + TOKEN +
                 '&channel=' + notificationChannels[cha] + 
-                '&text=' + JSON.stringify(msg),
+                '&text=' + msg,
             method: 'GET',
             headers: {
             "content-type": "application/json"
@@ -279,16 +263,26 @@ function notify(msg) {
         {
             if(error) {
                 console.log(error);
-            }
-            console.log(body);        
+            }      
         });
     }
+}
+
+function notifyDeletedFlag(flagKey) {
+    notify("The flag " + flagKey + "has been deleted. Type 'integrate feature <flag-key>'" + 
+        "to integrate feature, or 'discard feature <flag-key> to remove feature from code");
+}
+
+function notifyTimedOutFlag(flagKey, msTimeout) {
+    notify("The flag " + flagKey + "has been activated for " + msTimeout + "ms what would you like to do?");
 }
 
 /***************** Exports *******************/
 module.exports = {
     readyPromise : readyPromise,
-    notify : notify
+    notify : notify, 
+    notifyDeletedFlag : notifyDeletedFlag,
+    notifyTimedOutFlag : notifyTimedOutFlag
 }
 
 

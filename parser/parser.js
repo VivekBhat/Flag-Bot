@@ -16,25 +16,7 @@ var launchDarklyLibrary = "ldclient-node";
 /**************************************************/
 
 module.exports = {
-
 	parseCode : parseCode
-
-	// Public function to delete a feature flag
-	// discardFeature: true if you want to remove all new code
-	// returns a promise
-	/*deleteFeatureFlag : function(featureKey, discardFeature) {
-		return new Promise ( function(resolve, reject) { 
-			var files = findFilesWithFlag();
-			if(files.length == 0) {
-				reject("No feature flag '" + featureKey + "' was found.");
-				return;
-			}
-			_.each(files, function(file) {
-				parseCode(file, featureKey, discardFeature);
-			})
-			resolve();
-		});
-	} */
 } 
 
 /**************************************************/
@@ -42,6 +24,8 @@ module.exports = {
 /**************************************************/
 
 function parseCode(filePath, featureKey, discardFeature) {
+
+	filePath = "test.js";
 
 	this.filePath = filePath;
 
