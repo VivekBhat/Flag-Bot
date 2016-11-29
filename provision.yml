@@ -52,12 +52,15 @@
      with_items:
        - build-essential
        - npm
-       - nodejs
        - git
+
+   - name: Install npm
+     shell: curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash - && apt-get install -y nodejs
+
 
    - name: Clone git repo 
      git: 
-      repo: https://github.ncsu.edu/kebrey/FlagLagBot.git 
+      repo: https://github.com/VivekBhat/FlagLagBot.git 
       dest: "{{home_dir}}/{{app_dir}}"
       clone: yes
      register: git_cloned
@@ -79,5 +82,5 @@
    - name: Run webserver
      command: node "{{home_dir}}/{{app_dir}}/server.js" 40676
 
- - name: Print All EC2 variables
-   debug: var=ec2_instance
+   - name: Print All EC2 variables
+     debug: var=ec2_instance
