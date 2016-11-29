@@ -129,7 +129,7 @@ function handlePost(postJSON) {
                 flagKey = post.previousVersion.key;
                 deleteFlag(flagKey);
                 slackbotReady.then(function(){   
-                slackbot.notify(flagKey + " has been deleted... @test");
+                slackbot.notifyDeletedFlag(flagKey);
                 });
 
                 deleteFlagTimeout(flagKey);
@@ -289,7 +289,7 @@ function getFlag(flagKey, callback) {
 function flagTimedOut(flagKey, msTimeout) {
     //console.log("Timed out " + flagKey + msTimeout + "ms");
     slackbotReady.then(function(){
-        slackbot.notify("The flag " + flagKey + "has been activated for " + msTimeout + "ms what would you like to do?");
+        slackbot.notifyTimedOutFlag(flagKey, msTimeout);
     });
 }
 
