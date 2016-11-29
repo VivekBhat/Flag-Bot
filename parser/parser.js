@@ -9,7 +9,7 @@ var launchDarklyLibrary = "ldclient-node";
 /** Assumptions that would mess us up **/
 //  * Library and client variables are in every file - could be imported somehow
 
-//parseCode("test.js", "new-search-bar", false); 
+parseCode("test.js", "new-search-bar", false); 
 
 /**************************************************/
 /* Public
@@ -36,22 +36,33 @@ function parseCode(filePath, featureKey, discardFeature) {
 		this.libraryVarName = getLibraryVarName();
 		this.clientVarName = getClientVarName();
 
-		var featureCodeLeft = false; //Other feature flags are still here (used for removing library code
+		// Return if either var name is null
+		if (!this.libraryVarName || !this.clientVarName) {
+			console.log("LD variable not found.");
+			return;
+		}
+
+		var LDCodeLeft = false; //Other feature flag code is still in file
 		_.each(getClientOnceNodes(), function(onceNode) {
+			var featureCodeLeft = false;
 			_.each(getClientVariationNodes(onceNode), function(variationNode) {
 				var featureName = variationNode.getFlagName();
 				if(featureName == featureKey) {
-					removeFlagCode(onceNode, variationNode, discardFeature);
+					removeFlagCode(variationNode, discardFeature);
 				} else {
-					featureCodeLeft = true;
+					featureCodeLeft = true; // code in once node
+					LDCodeLeft = true; // code in whole file
 				}
 			});
+			// Delete once node if no longer contains variation nodes
+			if(!featureCodeLeft) 
+				onceNode.delete();
 		});
-		if(!featureCodeLeft) {
+		
+		if(!LDCodeLeft) {
 			deleteLDCode();
 		}
 		saveFile();
-
 	});
 }
 
@@ -112,12 +123,6 @@ function getClientOnceNodes() {
 // Gets feature flag layer of all feature flag code (client.variation)
 function getClientVariationNodes(onceNode) {
 	var variationNodes = [];
- 	/*walk(onceNode, function(subNode) {
- 		if(isVariationNode(subNode, this.clientVarName)) { 
- 			variationNodes.push(new VariationNode(subNode));
- 		}
- 	}.bind(this));*/
-
  	estraverse.traverse(onceNode, {
 		enter: function (subNode) {
 			if(isVariationNode(subNode, this.clientVarName)) { 
@@ -126,6 +131,13 @@ function getClientVariationNodes(onceNode) {
 		}
 	});
  	return variationNodes;
+}
+
+function isClientCall(node) {
+	if(node.expression.callee.object.name == this.clientVarName) {
+		console.log("Found client call");
+		return true;
+	}
 }
 
 function isOnceNode(node) {
@@ -141,6 +153,8 @@ function isOnceNode(node) {
 	}
 }
 
+
+
 function isVariationNode(node) {
 	try{
 		if(node.type == "ExpressionStatement" &&
@@ -154,46 +168,55 @@ function isVariationNode(node) {
 	}
 }
 
-// Assumes that you have code format if(showFeature) and else
-// TODO: support all code structures
-// TODO: handle case where more than one flag in once node
-function removeFlagCode(onceNode, variationNode, discardFeature) {
-	var that = this;
-	var flagBool = onceNode.getFlagBool();
-	walk(variationNode, function(node) {
-		//TODO: REMOVE!! Not necessary anymore
-		if(node.type == "IfStatement" && node.test.name == flagBool) {
-			if(!discardFeature) {
-				//Move contents of if outside of if
-				variationNode.replaceWithNewFeature(that.AST);
-			} else {
-				//Move contents of if outside of if
-				variationNode.replaceWithOldFeature(that.AST);
-			}
-		}
-	});
+// Assumes that you have code format if(showFeature) and else TODO
+function removeFlagCode(variationNode, discardFeature) {
+	if(!discardFeature) {
+		variationNode.replaceWithNewFeature(this.AST);
+	} else {
+		variationNode.replaceWithOldFeature(this.AST);
+	}
+}
 
-	var codeToKeep = variationNode.getCallbackContent();}
-
+//Deletes extra LD code like library call and client variable
 function deleteLDCode() {
 	//TODO
 }
 
 /********************* Node Objects ***********************/
 
-function OnceNode(node) {
+function OnceNode(node) {	
 
-	//TODO
-	node.getFlagBool = function(){
-		return "showFeature";
-		var flagBool = null;
-	 	walk(node, function(subNode) {
-	 		if(subNode) {
-	 			//todo
-	 		}
-	 	}.bind(this));
-	 	return flagbool;
-	}	
+	node.delete = function() {
+		estraverse.replace(node, {
+			enter: function (innerNode) {
+				if(_.isEqual(node,innerNode)){
+					console.log("Found once node to delete.");
+					return node.getCallbackContent(); 
+				}
+			}
+		});
+	}
+
+	node.getCallbackContent = function(){
+		//return node.expression.arguments[3].body.body;
+		var functionContent = null;
+		estraverse.traverse(node, {
+			enter: function (innerNode) {
+				if(innerNode.type == "FunctionExpression"){
+					estraverse.traverse(innerNode, {
+						enter: function (innerInnerNode) {
+							if(innerInnerNode.type == "BlockStatement"){
+								if( functionContent == null) { // Want first function
+									functionContent = innerInnerNode;
+								}
+							}
+						}
+					});
+				}
+			}
+		});
+		return functionContent;
+	}
 
 	return node;
 }
@@ -254,7 +277,7 @@ function VariationNode(node) {
 		var newFeatureNodes = [];
 		estraverse.traverse(node.getCallbackContent(), {
 			enter: function(innerNode) {
-				if(innerNode.type == "IfStatement" && innerNode.test.name == node.getFlagBool()) {
+				if(node.isFeatureIfStatement(innerNode)) {
 					newFeatureNodes.push(innerNode.consequent);
 				}
 			}
@@ -266,7 +289,7 @@ function VariationNode(node) {
 		var oldNodes = [];
 		estraverse.traverse(node.getCallbackContent(), {
 			enter: function(innerNode) {
-				if(innerNode.type == "IfStatement" && innerNode.test.name == node.getFlagBool()) {
+				if(node.isFeatureIfStatement(innerNode)) {
 					oldNodes.push(innerNode.alternate);
 				}
 			}
@@ -274,19 +297,37 @@ function VariationNode(node) {
 		return oldNodes;
 	}
 
+	node.isFeatureIfStatement = function(innerNode) {
+		if(innerNode.type == "IfStatement" && innerNode.test.name == node.getFlagBool()) {
+			return true;
+		}
+	}
+
 	node.replace = function(ast, keepFeature){
+		//Add code from within
 		estraverse.replace(ast, {
 			enter: function (innerNode) {
 				if(_.isEqual(node,innerNode)){
 					//return this.remove();
 					var codeToKeep = [];
-					if(keepFeature) {
-						codeToKeep = node.getNewFeatureCode();
-					} else {
-						codeToKeep = node.getOldCode();
-					}
-					node.expression.arguments[3].body.body = codeToKeep;
-					return node.getCallbackContent();
+					if(keepFeature) { codeToKeep = node.getNewFeatureCode(); } 
+					else { codeToKeep = node.getOldCode(); }
+					node.expression.arguments[3].body.body = node.expression.arguments[3].body.body.concat(codeToKeep);
+
+					// Remove flag code (already added what we wanted to keep)
+					// Remove client code
+					estraverse.replace(node, {
+						enter: function (innerInnerNode) {
+							if(node.isFeatureIfStatement(innerInnerNode)) {
+								return this.remove();
+							}
+							/*if(isClientCall(innerInnerNode)) {
+								return this.remove();
+							}*/			
+						}
+					});
+
+					return node.getCallbackContent(); 
 				}
 			}
 		});
