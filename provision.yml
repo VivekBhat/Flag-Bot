@@ -22,8 +22,8 @@
 
     - name: Create ec2 instance
     ec2: 
-     aws_access_key: AKIAITSZSL57S64MZSLQ
-     aws_secret_key: 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
+     aws_access_key: {access_key}
+     aws_secret_key: {secret_key}
      key_name: featureBot
      instance_type: t2.micro
      region: us-east-1
