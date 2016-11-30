@@ -19,12 +19,8 @@ var dirsToExclude = ["node_modules"];
 //  * Library and client variables are in every file
 //  * LD Code is inside client.once and client.variation.
 
-<<<<<<< HEAD
-//parseCode("test.js", "new-search-bar", false); 
-=======
 //Used for testing
-parseCode("TestRepo/test.js","new-search-bar",false);
->>>>>>> 6f4de88d1cf0fa09b8fb6927599bdebc05c34401
+//parseCode("TestRepo/test.js","new-search-bar",false);
 
 /**************************************************/
 /* Public
