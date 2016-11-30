@@ -13,6 +13,8 @@ Files created
 * `provision.yml`
 
 
+
+
 ##Acceptance Testing [40%]
 ####PRESTEPS
 
@@ -113,3 +115,5 @@ Please see [WORKSHEET.md](https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/
 **UC1, UC2 and UC3 Screencast**
 ![ Screencast for the 3 use cases] (https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/deploy_screencast.gif)
 
+
+[Service Deployment](https://www.youtube.com/watch?v=7K9fXtlD2F4&feature=youtu.be)
