@@ -106,6 +106,8 @@ function handlePost(postJSON) {
                 flagJSON = {"key":flagKey, "createDate":flagCreationDate, "isOn":true, "activationDate":flagUpdateDate};
                 updateFlagState(flagJSON);
 
+                console.log("Flag turned on");
+
                 createFlagTimeout(flagKey);
                 break;
 
@@ -115,6 +117,8 @@ function handlePost(postJSON) {
                 flagJSON = {"key":flagKey, "createDate":flagCreationDate, "isOn":false, "activationDate":flagUpdateDate};
                 updateFlagState(flagJSON);
 
+                console.log("Flag turned off");
+
                 deleteFlagTimeout(flagKey);
                 break;
 
@@ -123,6 +127,9 @@ function handlePost(postJSON) {
                 flagCreationDate = post.currentVersion.creationDate;
                 flagJSON = {"key":flagKey, "createDate":flagCreationDate, "isOn":false, "activationDate":flagUpdateDate};
                 updateFlagState(flagJSON);
+
+                console.log("Flag created");
+
                 break;
 
             case 'deleted flag':
@@ -131,6 +138,8 @@ function handlePost(postJSON) {
                 slackbotReady.then(function(){   
                     slackbot.notifyDeletedFlag(flagKey);
                 });
+
+                console.log("Flag deleted");
 
                 deleteFlagTimeout(flagKey);
                 break;
