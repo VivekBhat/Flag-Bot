@@ -128,6 +128,7 @@ function handlePost(postJSON) {
             case 'deleted flag':
                 flagKey = post.previousVersion.key;
                 deleteFlag(flagKey);
+<<<<<<< HEAD
                 slackbotReady.then(function(){ 
 
 var msg = 
@@ -170,6 +171,10 @@ var msg =
 
 
                 slackbot.notify(msg);
+=======
+                slackbotReady.then(function(){   
+                slackbot.notifyDeletedFlag(flagKey);
+>>>>>>> master
                 });
 
                 deleteFlagTimeout(flagKey);
@@ -246,11 +251,16 @@ function updateFlagState(flagJSON) {
 
 // Gets the flags and their states from the flag state file
 function loadFlagStates(callback) {    
-    return fs.readFile(flagStateFileName, 'utf8', (err, data) => {
+    fs.readFile(flagStateFileName, 'utf8', (err, data) => {
         if(err) {
-            console.log("Error: " + err.stack);
-        }
-        callback(data);
+            fs.writeFile(flagStateFileName, '', function(err) {
+                if(err) {
+                    console.log("Error the file was not able to be created: ", err.stack);
+                }
+            });
+            console.log("The file was created!");
+            callback("");
+        } else callback(data);
     });
 }
 
@@ -321,6 +331,54 @@ function getFlag(flagKey, callback) {
     });
 }
 
+// Retrieves the specified flag from launchdarkly & returns it in slackbot JSON format of relevant info
+function createWebhook(serverIP) {
+    var options = {
+      url: URLROOT + 'webhooks',
+      method: 'POST',
+      headers: {
+        "content-type": "application/json",
+        "Authorization": TOKEN
+      },
+      body: JSON.stringify({
+        "url": "http://ec2-35-164-239-118.us-west-2.compute.amazonaws.com/", //"http://" + serverIP + ":" + PORT,
+        "sign": true,
+        "on": true
+      })
+    };
+
+    // Send a http request to url and specify a callback that will be called upon its return.
+    request(options, function (error, response, body) 
+    {
+      if (error) {
+        console.log("Post error: ", error);
+      } else {
+        //var obj = JSON.parse(body);
+        //console.log("response: ", response);
+        console.log("Create:\n", body);
+      }
+    });
+}
+
+function getIP() {
+    var options = {
+    url: "http://ifconfig.co/json",
+    method: 'GET',
+  };
+
+  // Send a http request to url and specify a callback that will be called upon its return.
+  request(options, function (error, response, body) 
+  {
+    if (error) {
+      console.log("Get IP error: ", error);
+    } else {
+      var obj = JSON.parse(body);
+      console.log("IP: ", obj.ip);
+      createWebhook(obj.ip);
+    }
+  }); 
+}
+
 /*================================================
  * Timer functions
  *================================================*/
@@ -329,7 +387,7 @@ function getFlag(flagKey, callback) {
 function flagTimedOut(flagKey, msTimeout) {
     //console.log("Timed out " + flagKey + msTimeout + "ms");
     slackbotReady.then(function(){
-        slackbot.notify("The flag " + flagKey + "has been activated for " + msTimeout + "ms what would you like to do?");
+        slackbot.notifyTimedOutFlag(flagKey, msTimeout);
     });
 }
 
@@ -382,6 +440,7 @@ function serverInit() {
     // Lets ensure that our flag state file is up-to-date
     getAllFlags();
 
+    getIP();    //creates the webhook
 
     //Lets create the server
     var server = http.createServer(handleRequest);

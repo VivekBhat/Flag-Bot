@@ -1,10 +1,13 @@
 var _ = require('underscore');
-var SlackBot = require('slackbots');
 var LDAccess = require("../common/launchDarkly");
-var Parser = require("../parser/parser");
+var FileFinder = require("../parser/parser.js");
+var Botkit = require('botkit');
+var request = require('request');
 
-var notificationChannels = ["C2QHSD89J", "C2SA5Q458"];
+var TOKEN = 'xoxb-92608187490-C9qLMvPIwOltHpE6UCSKj9pX';
+var notificationChannels = ["featureflags", "demo"];
 var sendAsUser = false;
+var botName = "flaglagbot";
 
 //TESTING!
 /**************************************************************************/ 
@@ -39,28 +42,32 @@ if(testing) {
 }
 /**************************************************************************/ 
 
-// create a bot 
-var bot = new SlackBot({
-    // Add a bot https://my.slack.com/services/new/bot and put the token  
-    token: "xoxb-92608187490-1D8dc3X5vPjn6LPbjZucNEGx", 
-    name: 'FlagLag Bot'
+var controller = Botkit.slackbot({
+  debug: false
 });
 
 var readyPromise = new Promise(function(resolve, reject){
-    bot.on('start', function() {
-    //     var params = {
-    //     username: 'Buttons',
-    //     icon_emoji: ':unicorn_face:'
-    // };
+    console.log("promising...");
+    controller.spawn({
+      token: TOKEN,
+      name: botName
+    }).startRTM(function(err) {
         resolve();
-
     });
 });
 
 readyPromise.then(function(){
     console.log("Bot is ready!");
-    //notify(getCommands());
+    notify(getCommands());
 });
+
+/*controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
+  bot.reply(message,'Hello yourself.');
+  bot.say({
+    channel:"featureflags",
+    attachments:buttonMsg.attachments
+  })
+});*/
 
 var commands = [
 "list flags",
@@ -86,28 +93,14 @@ function getCommands() {
     return commandsMessage;
 }
 
-bot.on('message', function(data) {
+controller.on(['direct_message','direct_mention','mention'], function(bot, data) {
+
     // all ingoing events https://api.slack.com/rtm 
     // Check that it is a message type, not a bot, and the user is not the bot
-    if( data.type == 'message' && data.user && getUser(data.user).name != bot.name )
-    {
         var message = data.text;
 
-        // TODO: bot not working in the channel.
-        // not a direct message so must mention bot
-        if(getChannel(data.channel)) { 
-            var botMention = "<@" + bot.self.id + ">";
-            //not talking to the bot
-            if (!message.includes(botMention)) { 
-                return;
-            } else {
-                // Strip out mention, left with command
-                message = message.replace(botMention,""); 
-            }
-        }
-
-        // Find command in list and pull out argument
-        //TODO does not ensure there is space after command
+        // Finds command in list and pull out argument
+        //TODO test edge cases
         var command;
         var argument;
         _.each(commands, function(commandStr) {
@@ -127,13 +120,13 @@ bot.on('message', function(data) {
             case 'list flags':
                 LDAccess.getFlags(function(flagArray) {
                     if(flagArray.length == 0) {
-                        reply(data, "No flags were found.")
+                        bot.reply(data, {text:"No flags were found."});
                     } else {
                         var botReply = "Your feature flags:\n";
                         _.each(flagArray,function(flag){
                             botReply += flag + "\n";
                         });
-                        reply(data, botReply);
+                        bot.reply(data, {text:botReply});
                     }
                 });
                 break;
@@ -141,7 +134,7 @@ bot.on('message', function(data) {
             case 'create flag':
                 if(argument) {
                     if(argument.split(" ").length > 1) {
-                        reply(data, "Your flag key cannot have spaces.");
+                        bot.reply(data, {text:"Your flag key cannot have spaces."});
                         break;
                     }
                     LDAccess.createFlag(argument, function(successful) {
@@ -151,10 +144,10 @@ bot.on('message', function(data) {
                             //console.log("Got up to here \n");
                             botReply = "Sorry, there was a problem creating your flag.\n"
                         }
-                        reply(data, botReply);
+                        bot.reply(data, {text:botReply});
                     });
                 } else {
-                    reply(data, "Please provide an argument.");
+                    bot.reply(data, {text:"Please provide an argument."});
                 }
                 break;
 
@@ -165,19 +158,19 @@ bot.on('message', function(data) {
                         if(!successful) {
                             botReply = "Sorry, there was a problem deleting your flag. Make sure the key provided exists.\n"
                         }
-                        reply(data, botReply);
+                        bot.reply(data, {text:botReply});
                     });
                 } else {
-                    reply(data, "Please provide an argument.");
+                    bot.reply(data, {text:"Please provide an argument."});
                 }
                 break;
 
             case 'turn on flag':
                 LDAccess.turnOnFlag(argument, function(successful) {
                     if(successful) {
-                        reply(data, "Success! Your feature flag was turned on.");
+                        bot.reply(data, {text:"Success! Your feature flag was turned on."});
                     } else {
-                         reply(data, "Sorry, there was a problem turning your flag on.");
+                        bot.reply(data, {text:"Sorry, there was a problem turning your flag on."});
                     }
                 });
                 break;
@@ -185,157 +178,78 @@ bot.on('message', function(data) {
             case 'turn off flag':
                 LDAccess.turnOffFlag(argument, function(successful) {
                     if(successful) {
-                        reply(data, "Success! Your feature flag was turned off.");
+                        bot.reply(data, {text: "Success! Your feature flag was turned off."});
                     } else {
-                         reply(data, "Sorry, there was a problem turning your flag off");
+                        bot.reply(data, {text:"Sorry, there was a problem turning your flag off"});
                     }
                 });
                 break;
 
             case 'integrate feature':
-                integrateFeature(argument);                
+                var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, false);
+                flagDeletedPromise.then( function(val) {
+                    bot.reply(data, {text: "Success! Your feature was integreted into your code."});
+                })
+                .catch( function(err) {
+                    bot.reply(data, {text:"Sorry, there was a problem integrating your feature."});
+                })               
                 break;
 
             case 'discard feature':
-                discardFeature(argument);
+                var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, true);
+                flagDeletedPromise.then( function(val) {
+                    bot.reply(data, {text: "Success! Your feature was discarded from your code."});
+                })
+                .catch( function(err) {
+                    bot.reply(data, {text: "Sorry, there was a problem discarding your feature."});
+                });
                 break;
 
             default :
-                reply(data,getCommands());
+                bot.reply(data,{text:getCommands()});
         }
-    }
 });
 
 //Posts message to notificationChannels array defined at top
 function notify(msg) {
-    bot.getChannels().then(function(){
-        _.each(notificationChannels, function(channelId) {
-            var channel = getChannel(channelId);
-            if( channel ) 
-            {
-                bot.postMessageToChannel(channel.name, msg, {as_user: sendAsUser});    
-            }
+    for(var cha in notificationChannels) {
+        var options = {
+            url: 'https://slack.com/api/chat.postMessage' + 
+                '?token=' + TOKEN +
+                '&channel=' + notificationChannels[cha] + 
+                '&text=' + msg,
+            method: 'GET',
+            headers: {
+            "content-type": "application/json"
+            },
+        };
+
+        // Send a http request to url and specify a callback that will be called upon its return.
+        request(options, function (error, response, body) 
+        {
+            if(error) {
+                console.log(error);
+            }      
         });
-    });
-}
-
-
-function reply(data, msg)
-{
-    var channel = getChannel(data.channel)
-    if( channel )
-    {
-        //console.log( "replying in channel ")
-        bot.postMessageToChannel(channel.name, msg, {as_user: sendAsUser});    
-    }
-    else
-    {
-        var user = getUser(data.user)
-        bot.postMessageToUser(user.name, msg, {as_user: sendAsUser} );
     }
 }
 
-function getChannel(channelId)
-{
-    return bot.channels.filter(function (item) 
-    {
-        return item.id === channelId;
-    })[0];
+function notifyDeletedFlag(flagKey) {
+    notify("The flag " + flagKey + "has been deleted. Type 'integrate feature <flag-key>'" + 
+        "to integrate feature, or 'discard feature <flag-key> to remove feature from code");
 }
 
-function getUser(userId)
-{
-    return bot.users.filter(function (item) 
-    {
-        return item.id === userId;
-    })[0];
-}
-
-/***************** Bot Actions *******************/
-
-function integrateFeature(flagKey){
-    var flagDeletedPromise = Parser.deleteFeatureFlag(flagKey);
-    flagDeletedPromise.then( function(val) {
-        reply(data, "Success! Your feature was integreted into your code.");
-    })
-    .catch( function(err) {
-        reply(data, "Sorry, there was a problem integrating your feature.");
-    });
-}
-
-function discardFeature(flagKey){
-    var flagDeletedPromise = Parser.deleteFeatureFlag(flagKey, true);
-    flagDeletedPromise.then( function(val) {
-        reply(data, "Success! Your feature was discarded from your code.");
-    })
-    .catch( function(err) {
-        reply(data, "Sorry, there was a problem discarding your feature.");
-    });
+function notifyTimedOutFlag(flagKey, msTimeout) {
+    notify("The flag " + flagKey + "has been activated for " + msTimeout + "ms what would you like to do?");
 }
 
 /***************** Exports *******************/
 module.exports = {
     readyPromise : readyPromise,
-    notify : notify
+    notify : notify, 
+    notifyDeletedFlag : notifyDeletedFlag,
+    notifyTimedOutFlag : notifyTimedOutFlag
 }
 
 
-// =========BOT BUTTON=========
-var Botkit = require('botkit');
 
-// connect the bot to a stream of messages
-
-var controller = Botkit.slackbot({
-  debug: false
-  //include "log: false" to disable logging
-  //or a "logLevel" integer from 0 to 7 to adjust logging verbosity
-});
-
-
-controller.spawn({
-  token: 'xoxb-101499277473-zwmiBF1e1azyeXflzrOzbvpF',
-}).startRTM()
-
-
-controller.hears('deleted',['mention', 'direct_mention'], function(bot,message) {
-	bot.reply(message,msg);
-});
-
-
-var msg = 
-	{
-    "text": "Would you like to integrate or delete the feature?",
-    "username": "ButtonBot",
-    "icon_emoji": ":unicorn_face:",
-            
-    "attachments": [
-        {  
-            "text": "Choose an option: ",
-            "fallback": "You are unable to choose a game",
-            "callback_id": "wopr_game",
-            "color": "#3AA3E3",
-            "attachment_type": "default",
-            "actions": [
-                {
-                    "name": "chess",
-                    "text": "Integrate Feature",
-                    "type": "button",
-                    "value": "chess"
-                },
-                {
-                    "name": "war",
-                    "text": "Discard feature",
-                    "style": "danger",
-                    "type": "button",
-                    "value": "war",
-                    "confirm": {
-                        "title": "Are you sure?",
-                        "text": "Wouldn't you prefer something else?",  //extra messages
-                        "ok_text": "Yes",
-                        "dismiss_text": "No"
-                    }
-                }
-            ]
-        }
-    ]
-}
