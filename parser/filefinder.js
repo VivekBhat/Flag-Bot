@@ -5,7 +5,7 @@ var exec = require('child_process').exec;
 
 child = exec("find . -type f -name '*.js' > '" + __dirname + "/output.txt'");
 
-deleteFeatureFlag("new-search-bar",false);
+//deleteFeatureFlag("new-search-bar",false);
 
 // discardFeature: true if you want to remove all new code
 // returns a promise
