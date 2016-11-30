@@ -26,7 +26,7 @@ var slackbotReady = slackbot.readyPromise;
  *================================================*/
 
 
-const PORT=40676; // This is the port # that the server will be listening for request on
+const PORT=80; // This is the port # that the server will be listening for request on
 const URLROOT = "https://app.launchdarkly.com/api/v2/";
 const TOKEN = "api-094a8936-af14-4ac3-82ce-51e9f2a6e42f";
 
@@ -296,7 +296,7 @@ function createWebhook(serverIP) {
         "Authorization": TOKEN
       },
       body: JSON.stringify({
-        "url": "http://ec2-35-164-239-118.us-west-2.compute.amazonaws.com/", //"http://" + serverIP + ":" + PORT,
+        "url": /*"http://ec2-35-164-239-118.us-west-2.compute.amazonaws.com/",*/ "http://" + serverIP + ":" + PORT,
         "sign": true,
         "on": true
       })
