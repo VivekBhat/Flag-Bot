@@ -15,13 +15,7 @@
       aws_secret_key: SJkQvxE3HEgiOq5MbKYfK6dgRrRXNYozUgu1OaYD
       state: present
       rules:
-        - proto: tcp
-          from_port: 80
-          to_port: 80
-          cidr_ip: 0.0.0.0/0
-        - proto: tcp
-          from_port: 22
-          to_port: 22
+        - proto: all
           cidr_ip: 0.0.0.0/0
       rules_egress:
         - proto: all
@@ -127,6 +121,11 @@
   tasks:
    - name: Run webserver
      command: forever start "{{home_dir}}/{{app_dir}}/server/server.js" 40676
+     
+   - name: Check forever list
+     command: forever list
+     register: forever_list
+     changed_when: false
 
    - name: Print All EC2 variables
      debug: var=ec2_host
