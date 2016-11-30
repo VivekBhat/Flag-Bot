@@ -1,4 +1,19 @@
-###Acceptance Testing
+### Deployment Scripts [25%]
+
+1. Establish connection to EC2 - Identity and access management (IAM)
+   1. Access key ID & secret access key from IAM ( provides admin privileges for AWS instances)
+   2. ssh keys to authenticate connection between host and AWS Admin user
+        * Add these ssh keys to EC2 key pairs in configuration panel
+2. SSH into AWS instance
+3. Run ansible play book
+4. Enter github credentials to access repository for cloning
+
+Files created
+* `server_deployment.yml`
+* `provision.yml`
+
+
+###Acceptance Testing [40%]
 ####PRESTEPS
 
 1. User is logged in to the correct team domain: **csc510-slackbot**
@@ -24,7 +39,7 @@ STEPS
 
 1. Precondition: A flag is deleted on the LaunchDarkly Dashboard and the server is receiving webhooks from it.
 2. Follow presteps[1-4]
-3. User receives an alert message on the channel saying: **A `<flag-key>' has been deleted. What would like to do - integrate or discard feature?
+3. User receives an alert message on the channel saying: **A `<flag-key>` has been deleted. What would like to do - integrate or discard feature?**
 4. User types: **integrate feature '<flag-key>'** where the flag-key is mentioned in previous step
 5. The bot replies with a success message if the feature existed in the code and was successfully integrated. **Success! Your feature was integreted into your code**. If not found, it responds with a error message 
 
@@ -58,7 +73,7 @@ STEPS
 
 1. Precondition: A flag is deleted on the LaunchDarkly Dashboard and the server is receiving webhooks from it.
 2. Follow presteps[1-4]
-3. User receives an alert message on the channel saying: **A `<flag-key>' has been deleted. What would like to do - integrate or discard feature?
+3. User receives an alert message on the channel saying: **A `<flag-key>` has been deleted. What would like to do - integrate or discard feature?**
 
 #### Test Case 5 - Turn Feature Flag ON/OFF
 Related to: [Issue #5](../../issues/5)
@@ -82,10 +97,18 @@ STEPS
 3. User types: **@flaglagbot delete flag `<flag-key>`**, where flag-key is the name of the flags on Launch Darkly Dashboard
 4. The bot with success message: ** Your flag `<flag-key>` was deleted!**
 
-### Exploratory Testing and Code Inspection
+### Exploratory Testing and Code Inspection [25%]
 We have set testing to false, so no mock data is used. Our implemented functionality in the above test cases is tested on real data. 
 
 We have handled major error flows in the above use cases. For example some of them include:
 * If user uses a wrong syntax (missing keyword) of the command, the user is presented with the options available again.
 * If user flag-key is not present, then an appropriate message is shown in Test Case 6 - Delete flag, Turn on/off.
+
+
+## Task Tracking & Screencast [10%]
+
+Please see [WORKSHEET.md](https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/WORKSHEET.md) for task tracking information.
+
+**UC1, UC2 and UC3 Screencast**
+![ Screencast for the 3 use cases] (https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/deploy_screencast.gif)
 
