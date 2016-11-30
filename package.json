@@ -23,10 +23,9 @@
     "ldclient-node": "^3.0.3",
     "nock": "^0.34.1",
     "request": "^2.75.0",
-
+    "slash": "^1.0.0",
     "underscore": "^1.8.3",
     "bluebird": "^3.4.6",
-    "parse-link-header": "^0.4.1",
-    "slash": "^1.0.0",
+    "parse-link-header": "^0.4.1"
   }
 }
