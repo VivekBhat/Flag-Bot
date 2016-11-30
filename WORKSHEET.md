@@ -46,7 +46,7 @@
 | ------------- | ------------  |  ------------
 | Use Case 7 & 8 Implementation - Integrate and Discard Features | Completed | [Issue #7](../../issues/7), [Issue #8](../../issues/8)
 | Keep working on Parser Code | In Progress | [Issue #11](../../issues/11) 
-| Implement git REST calls to push parser code changes | Completed | NA
+| Implement git REST calls to push parser code changes | Completed | [Issue #12](../../issues/12)
 | Implement Ansible Playbook | Completed | Deploy Milestone Requirement
 | Setup EC2 Server  | Completed | Deploy Milestone Requirement
 | Screencast Deploy Milestone | Completed | Deploy Milestone Requirement
