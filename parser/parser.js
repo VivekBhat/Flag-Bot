@@ -74,7 +74,7 @@ module.exports = {
 
 //Used for testing
 //parseCode("TestRepo/test.js","new-search-bar",false);
-module.exports.deleteFeatureFlag("new-search-bar",false);
+//module.exports.deleteFeatureFlag("new-search-bar",false);
 
 /**************************************************/
 /* Private
@@ -85,7 +85,6 @@ function parseCode(filePath, featureKey, discardFeature) {
 	var file = fs.readFileSync(filePath);
 	if(file != null) {
 
- 		//TODO: is this being
 		this.AST = esprima.parse(file); 
 		this.libraryVarName = getLibraryVarName();
 		this.clientVarName = getClientVarName();

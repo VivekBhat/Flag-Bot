@@ -55,13 +55,19 @@ var readyPromise = new Promise(function(resolve, reject){
       token: TOKEN,
       name: botName
     }).startRTM(function(err) {
-        resolve();
+        if(err) {
+            reject(err);
+        } else {
+            resolve();
+        }
     });
 });
 
 readyPromise.then(function(){
     console.log("Bot is ready!");
-    //notify(getCommands());
+    notify(getCommands());
+}).catch(function(err) {
+    console.log(err);
 });
 
 var commands = [
