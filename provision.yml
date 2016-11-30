@@ -81,7 +81,14 @@
    - name: Install npm packages 
      npm:
       path: "{{home_dir}}/{{app_dir}}"
-     
+   
+   - name: "Install NPM Packages"
+     npm: path=/srv/DevOps state=latest
+    
+   - name: "Run app: forever start main.js"
+     command: forever start /srv/DevOps/main.js
+     when: "forever_list.stdout.find('/srv/DevOps/main.js') == -1"
+
 - name: Tasks 
   hosts: ec2_instance
   sudo: yes
