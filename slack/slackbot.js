@@ -61,22 +61,14 @@ readyPromise.then(function(){
     notify(getCommands());
 });
 
-/*controller.hears('hello',['direct_message','direct_mention','mention'],function(bot,message) {
-  bot.reply(message,'Hello yourself.');
-  bot.say({
-    channel:"featureflags",
-    attachments:buttonMsg.attachments
-  })
-});*/
-
 var commands = [
-"list flags",
-"create flag",
-"delete flag",
-"turn on flag",
-"turn off flag",
-"integrate feature",
-"discard feature"
+{name:"list flags", expectsArg:false},
+{name:"create flag", expectsArg:true},
+{name:"delete flag", expectsArg:true},
+{name:"turn on flag", expectsArg:true},
+{name:"turn off flag", expectsArg:true},
+{name:"integrate feature", expectsArg:true},
+{name:"discard feature", expectsArg:true}
 ];
 
 function getCommands() {
@@ -103,19 +95,29 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
         //TODO test edge cases
         var command;
         var argument;
-        _.each(commands, function(commandStr) {
-            if(message.includes(commandStr)) {
-                command = commandStr;
-                // +1 accounts for space after command
-                var commandStart = message.toLowerCase().indexOf(command + " ");
+        _.each(commands, function(commandObj) {
+            if(message.includes(commandObj.name)) {
+                command = commandObj;
+                var commandStart = message.toLowerCase().indexOf(command.name + " ");
                 if(commandStart != -1) {
-                    var argStart =  commandStart + command.length + 1;
+                    // +1 accounts for space after command
+                    var argStart =  commandStart + command.name.length + 1;
                     argument = message.substr(argStart).toLowerCase().trim();
                 }
             }
         });
 
-        switch(command) {
+        if(!command){
+            bot.reply(data,{text:getCommands()});
+            return;
+        }
+
+        if(command.expectsArg && !argument) {
+            bot.reply(data, {text:"Please provide a flagkey."});
+            return;
+        }
+
+        switch(command.name) {
 
             case 'list flags':
                 LDAccess.getFlags(function(flagArray) {
@@ -132,27 +134,23 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
                 break;
 
             case 'create flag':
-                if(argument) {
-                    if(argument.split(" ").length > 1) {
-                        bot.reply(data, {text:"Your flag key cannot have spaces."});
-                        break;
+                LDAccess.createFlag(argument, function(successful) {
+                     //console.log("attempt made? \n")
+                    var botReply = "Your flag ("+ argument +") was created!\n";
+                    if(!successful) {
+                        //console.log("Got up to here \n");
+                        botReply = "Sorry, there was a problem creating your flag.\n"
                     }
-                    LDAccess.createFlag(argument, function(successful) {
-                         //console.log("attempt made? \n")
-                        var botReply = "Your flag ("+ argument +") was created!\n";
-                        if(!successful) {
-                            //console.log("Got up to here \n");
-                            botReply = "Sorry, there was a problem creating your flag.\n"
-                        }
-                        bot.reply(data, {text:botReply});
-                    });
-                } else {
-                    bot.reply(data, {text:"Please provide an argument."});
-                }
+                    bot.reply(data, {text:botReply});
+                });
                 break;
 
             case 'delete flag':
-                if(argument) {
+                flagKeyExists(argument, function(flagKeyExists) {
+                    if(!flagKeyExists) {
+                        bot.reply(data, {text: "That flag key does not exist."});
+                        return;
+                    }
                     LDAccess.deleteFlag(argument, function(successful) {
                         var botReply = "Your flag ("+ argument +") was deleted!\n";
                         if(!successful) {
@@ -160,48 +158,74 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
                         }
                         bot.reply(data, {text:botReply});
                     });
-                } else {
-                    bot.reply(data, {text:"Please provide an argument."});
-                }
+                });
                 break;
 
             case 'turn on flag':
-                LDAccess.turnOnFlag(argument, function(successful) {
-                    if(successful) {
-                        bot.reply(data, {text:"Success! Your feature flag was turned on."});
-                    } else {
-                        bot.reply(data, {text:"Sorry, there was a problem turning your flag on."});
+                flagKeyExists(argument, function(flagKeyExists) {
+                    if(!flagKeyExists) {
+                        bot.reply(data, {text: "That flag key does not exist."});
+                        return;
                     }
+                    LDAccess.turnOnFlag(argument, function(successful) {
+                        if(successful) {
+                            bot.reply(data, {text:"Success! Your feature flag was turned on."});
+                        } else {
+                            bot.reply(data, {text:"Sorry, there was a problem turning your flag on."});
+                        }
+                    });
                 });
                 break;
 
             case 'turn off flag':
-                LDAccess.turnOffFlag(argument, function(successful) {
-                    if(successful) {
-                        bot.reply(data, {text: "Success! Your feature flag was turned off."});
-                    } else {
-                        bot.reply(data, {text:"Sorry, there was a problem turning your flag off"});
+                flagKeyExists(argument, function(flagKeyExists) {
+                    if(!flagKeyExists) {
+                        bot.reply(data, {text: "That flag key does not exist."});
+                        return;
                     }
+                    LDAccess.turnOffFlag(argument, function(successful) {
+                        if(successful) {
+                            bot.reply(data, {text: "Success! Your feature flag was turned off."});
+                        } else {
+                            bot.reply(data, {text:"Sorry, there was a problem turning your flag off"});
+                        }
+                    });
                 });
                 break;
 
             case 'integrate feature':
-                var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, false);
-                flagDeletedPromise.then( function(val) {
-                    bot.reply(data, {text: "Success! Your feature was integreted into your code."});
-                })
-                .catch( function(err) {
-                    bot.reply(data, {text:"Sorry, there was a problem integrating your feature."});
-                })               
+                flagKeyExists(argument, function(flagKeyExists) {
+                    if(!flagKeyExists) {
+                        bot.reply(data, {text: "That flag key does not exist."});
+                        return;
+                    }
+                    var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, false);
+                    flagDeletedPromise.then( function(val) {
+                        LDAccess.deleteFlag(argument, function(successful) {
+                            bot.reply(data, {text: "Success! Your feature was integrated into your code."});
+                        });
+                    })
+                    .catch( function(err) {
+                        bot.reply(data, {text:"Sorry, there was a problem integrating your feature."});
+                    }) 
+                });
                 break;
 
             case 'discard feature':
-                var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, true);
-                flagDeletedPromise.then( function(val) {
-                    bot.reply(data, {text: "Success! Your feature was discarded from your code."});
-                })
-                .catch( function(err) {
-                    bot.reply(data, {text: "Sorry, there was a problem discarding your feature."});
+                flagKeyExists(argument, function(flagKeyExists) {
+                    if(!flagKeyExists) {
+                        bot.reply(data, {text: "That flag key does not exist."});
+                        return;
+                    }
+                    var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, true);
+                    flagDeletedPromise.then( function(val) {
+                        LDAccess.deleteFlag(argument, function(successful) {
+                            bot.reply(data, {text: "Success! Your feature was discarded from your code."});
+                        });
+                    })
+                    .catch( function(err) {
+                        bot.reply(data, {text: "Sorry, there was a problem discarding your feature."});
+                    });
                 });
                 break;
 
@@ -209,6 +233,12 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
                 bot.reply(data,{text:getCommands()});
         }
 });
+
+function flagKeyExists(argument, callback) {
+    LDAccess.getFlags(function(flagArray) {
+        callback(flagArray.includes(argument));
+    });
+}
 
 //Posts message to notificationChannels array defined at top
 function notify(msg) {

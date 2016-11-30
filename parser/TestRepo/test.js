@@ -22,6 +22,22 @@ client.once('ready', function() {
       client.close();
     });
   });
+
+  client.variation("test-flag", user, false, function(err, showFeature) {
+    var test = "This should not be deleted.";
+    if (showFeature) {
+      // application code to show the feature
+      console.log("Showing your feature to " + user.key );
+    } else {
+      // the code to run if the feature is off
+      console.log("Not showing your feature to " + user.key);
+    }
+
+    client.flush(function() {
+      client.close();
+    });
+  });
+
 });
 var options = {
   url: 'https://app.launchdarkly.com/api/v2/flags/default',
