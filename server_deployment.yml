@@ -72,12 +72,19 @@
    - home_dir: /home/ubuntu
    - app_dir: App
    - temp_dir: /tmp/
+   
+  vars_prompt: 
+   - name: "githubuser" 
+     prompt: "Enter your github username" 
+     private: no 
+   - name: "githubpassword" 
+     prompt: "Enter your github password" 
+     private: yes 
 
   tasks:
   
    - name: Hello
      shell: echo Hello!
-  
   
    - name: Install Packages 
      apt: name={{ item }} update_cache=yes  
@@ -90,21 +97,23 @@
    - name: Install Node
      shell: curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash - && apt-get install -y nodejs
 
-
    - name: Clone git repo 
      git: 
-      repo: https://github.com/VivekBhat/FlagLagBot.git 
+      repo: https://{{ githubuser }}:{{ githubpassword }}@github.ncsu.edu/kebrey/FlagLagBot.git
       dest: "{{home_dir}}/{{app_dir}}"
-      clone: yes
-     register: git_cloned
+      version: master
+      #key_file: /home/james/.ssh/id_rsa
+      #clone: yes
+     #register: git_cloned
+     
+   - name: Install forever (to run Node.js app)
+     npm: name=forever global=yes state=present
 
-   - name: "Install NPM Packages"
-     npm: path={{home_dir}}/{{app_dir}} state=latest
-    
-   - name: "Run app: forever start main.js"
-     command: forever start {{home_dir}}/{{app_dir}}/main.js
-    when: "forever_list.stdout.find('{{home_dir}}/{{app_dir}}/main.js') == -1"
-
+   - name: Install npm packages 
+     npm:
+      path: "{{home_dir}}/{{app_dir}}"
+     
+     
      
 - name: Tasks 
   hosts: ec2_host
@@ -117,7 +126,7 @@
 
   tasks:
    - name: Run webserver
-     command: node "{{home_dir}}/{{app_dir}}/server/server.js" 40676
+     command: forever start "{{home_dir}}/{{app_dir}}/server/server.js" 40676
 
    - name: Print All EC2 variables
      debug: var=ec2_host
