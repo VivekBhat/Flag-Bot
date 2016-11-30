@@ -4,10 +4,13 @@ var FileFinder = require("../parser/parser.js");
 var Botkit = require('botkit');
 var request = require('request');
 
-var TOKEN = 'xoxb-92608187490-C9qLMvPIwOltHpE6UCSKj9pX';
-var notificationChannels = ["featureflags", "demo"];
+var notificationChannels = ["featureflags"];
 var sendAsUser = false;
 var botName = "flaglagbot";
+
+var fs = require("fs");
+var config = JSON.parse(fs.readFileSync("../config.JSON", 'utf8'));
+var TOKEN = config.ldToken;
 
 //TESTING!
 /**************************************************************************/ 
@@ -58,7 +61,7 @@ var readyPromise = new Promise(function(resolve, reject){
 
 readyPromise.then(function(){
     console.log("Bot is ready!");
-    notify(getCommands());
+    //notify(getCommands());
 });
 
 var commands = [

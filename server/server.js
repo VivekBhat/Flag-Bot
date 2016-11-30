@@ -28,7 +28,8 @@ var slackbotReady = slackbot.readyPromise;
 
 const PORT=40000; // This is the port # that the server will be listening for request on
 const URLROOT = "https://app.launchdarkly.com/api/v2/";
-const TOKEN = "api-094a8936-af14-4ac3-82ce-51e9f2a6e42f";
+var config = JSON.parse(fs.readFileSync("../config.JSON", 'utf8'));
+var TOKEN = config.ldToken;
 
 // Refer to important notes when changing these
 const PROJKEY = "default";
