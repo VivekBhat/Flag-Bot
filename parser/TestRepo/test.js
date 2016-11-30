@@ -9,6 +9,7 @@ var user = {
 };
 client.once('ready', function() {
   client.variation("new-search-bar", user, false, function(err, showFeature) {
+    var test = "This should not be deleted.";
     if (showFeature) {
       // application code to show the feature
       console.log("Showing your feature to " + user.key );

@@ -5,18 +5,69 @@ var walk = require("esprima-walk");
 var escodegen = require("escodegen")
 var estraverse = require('estraverse');
 var launchDarklyLibrary = "ldclient-node";
+var fs = require("fs");
+var utils = require('util')
+var exec = require('child_process').exec;
+var slash = require('slash');
 
-/** Assumptions that would mess us up **/
-//  * Library and client variables are in every file - could be imported somehow
 
+var dirname = slash(__dirname); //current directory
+var gitRepo = dirname + "/" + "TestRepo"; //directory of git repo
+var dirsToExclude = ["node_modules"];
+
+/** Assumptions **/
+//  * Library and client variables are in every file
+//  * LD Code is inside client.once and client.variation.
+
+<<<<<<< HEAD
 //parseCode("test.js", "new-search-bar", false); 
+=======
+//Used for testing
+parseCode("TestRepo/test.js","new-search-bar",false);
+>>>>>>> 6f4de88d1cf0fa09b8fb6927599bdebc05c34401
 
 /**************************************************/
 /* Public
 /**************************************************/
-
 module.exports = {
-	parseCode : parseCode
+	deleteFeatureFlag: function(featureKey, discardFeature) {
+		return new Promise ( function(resolve, reject) { 
+			// executes `find for all .js files`
+			child = exec("find " + gitRepo + " -type f -name '*.js' > " + dirname + "/output.txt", function(err) {
+				if(err){
+					console.log("ERROR: " + err);
+				}
+				var input = fs.createReadStream(dirname + "/output.txt");
+				var lineReader = require('readline').createInterface({
+					input: input
+				});
+				var fileCount = 0;
+				lineReader.on('line', function (line) {
+					fileCount++;
+
+					var excluded = false;
+					for(var d in dirsToExclude) {
+						var dirname = dirsToExclude[d];
+						if(line.includes("/" + dirname + "/")) {
+							excluded = true;
+							console.log("Not parsing file: " + line);
+							break;
+						}
+					}
+					if(!excluded)
+						parseCode(line, featureKey, discardFeature);
+				});
+				lineReader.on('close', function() {
+					if(fileCount == 0) {
+						reject("No files were found.");
+						return;
+					}
+					resolve();
+				});
+			});
+			
+		});
+	}
 } 
 
 /**************************************************/
@@ -24,8 +75,6 @@ module.exports = {
 /**************************************************/
 
 function parseCode(filePath, featureKey, discardFeature) {
-
-	filePath = "test.js";
 
 	this.filePath = filePath;
 
@@ -38,7 +87,7 @@ function parseCode(filePath, featureKey, discardFeature) {
 
 		// Return if either var name is null
 		if (!this.libraryVarName || !this.clientVarName) {
-			console.log("LD variable not found.");
+			console.log("LD variable not found. Will not parse.");
 			return;
 		}
 
@@ -60,15 +109,16 @@ function parseCode(filePath, featureKey, discardFeature) {
 		});
 		
 		if(!LDCodeLeft) {
+			console.log("Deleting LD code");
 			deleteLDCode();
 		}
 		saveFile();
 	});
 }
 
-//TODO: doesn't currently save comments...
 function saveFile() {
-	var wstream = fs.createWriteStream('testModified.js'); //TODO: use filename
+	var savename = filePath.replace(/(\.[\w\d_-]+)$/i, 'modified$1');
+	var wstream = fs.createWriteStream(savename);
 	wstream.write(escodegen.generate(this.AST));
 	wstream.end();
 }
@@ -99,6 +149,7 @@ function getClientVarName() {
 			&& node.property && node.property.name == "init") {
 			while(node.parent){
 				if(node.type == "VariableDeclarator") {
+					that.clientDeclarator = node; //Used to delete it later
 					clientVarName =  node.id.name;
 					break;
 				}
@@ -153,8 +204,6 @@ function isOnceNode(node) {
 	}
 }
 
-
-
 function isVariationNode(node) {
 	try{
 		if(node.type == "ExpressionStatement" &&
@@ -168,7 +217,6 @@ function isVariationNode(node) {
 	}
 }
 
-// Assumes that you have code format if(showFeature) and else TODO
 function removeFlagCode(variationNode, discardFeature) {
 	if(!discardFeature) {
 		variationNode.replaceWithNewFeature(this.AST);
@@ -179,7 +227,16 @@ function removeFlagCode(variationNode, discardFeature) {
 
 //Deletes extra LD code like library call and client variable
 function deleteLDCode() {
-	//TODO
+	var that = this;
+	estraverse.traverse(this.AST, {
+		enter: function (innerNode) {
+			//TODO: Maybe parent param is breaking it?
+			if(_.isEqual(that.clientDeclarator,innerNode)){
+				console.log("Delete client declarator");
+				return this.remove(); 
+			}
+		}
+	});
 }
 
 /********************* Node Objects ***********************/
@@ -187,7 +244,7 @@ function deleteLDCode() {
 function OnceNode(node) {	
 
 	node.delete = function() {
-		estraverse.replace(node, {
+		estraverse.replace(this.AST, {
 			enter: function (innerNode) {
 				if(_.isEqual(node,innerNode)){
 					console.log("Found once node to delete.");
@@ -322,17 +379,15 @@ function VariationNode(node) {
 								return this.remove();
 							}
 							/*if(isClientCall(innerInnerNode)) {
-								return this.remove();
-							}*/			
+								return this.remove(); //TODO: not removing
+							}*/
 						}
 					});
-
 					return node.getCallbackContent(); 
 				}
 			}
 		});
 	}
-
 
 	return node;
 }
