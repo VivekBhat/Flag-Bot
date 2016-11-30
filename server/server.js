@@ -26,7 +26,7 @@ var slackbotReady = slackbot.readyPromise;
  *================================================*/
 
 
-const PORT=80; // This is the port # that the server will be listening for request on
+const PORT=40000; // This is the port # that the server will be listening for request on
 const URLROOT = "https://app.launchdarkly.com/api/v2/";
 const TOKEN = "api-094a8936-af14-4ac3-82ce-51e9f2a6e42f";
 
@@ -308,14 +308,13 @@ function createWebhook(serverIP) {
       if (error) {
         console.log("Post error: ", error);
       } else {
-        //var obj = JSON.parse(body);
-        //console.log("response: ", response);
-        console.log("Create:\n", body);
+        var obj = JSON.parse(body);
+        console.log("Created the webhook at: ", obj.url);
       }
     });
 }
 
-function getIP() {
+function getIP(callback) {
     var options = {
     url: "http://ifconfig.co/json",
     method: 'GET',
@@ -329,7 +328,7 @@ function getIP() {
     } else {
       var obj = JSON.parse(body);
       console.log("IP: ", obj.ip);
-      createWebhook(obj.ip);
+      callback(obj.ip);
     }
   }); 
 }
@@ -367,15 +366,6 @@ function deleteFlagTimeout(flagKey) {
     //console.log("timeout array = " + timeoutArray);
 }
 
-/*function mockNotification() {
-    slackbotReady.then(function(){
-        slackbot.notify("MOCK: A feature flag has been deleted. What would you like to do? (Need button options for either integrating or discarding feature)");
-    });
-}
-
-setInterval(mockNotification, 20000);*/
-
-
 /*================================================
  * Server Init
  *================================================*/
@@ -395,7 +385,7 @@ function serverInit() {
     // Lets ensure that our flag state file is up-to-date
     getAllFlags();
 
-    getIP();    //creates the webhook
+    getIP(createWebhook);    //creates the webhook by passing retreived public IP to createWebhook() as a callback
 
     //Lets create the server
     var server = http.createServer(handleRequest);
