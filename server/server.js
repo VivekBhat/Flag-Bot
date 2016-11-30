@@ -34,7 +34,7 @@ const TOKEN = "api-094a8936-af14-4ac3-82ce-51e9f2a6e42f";
 const PROJKEY = "default";
 const ENVIRON = "production";
 
-const FLAG_TIMEOUT_MS = 40000;
+const FLAG_TIMEOUT_MS = 20000;
 
 var flagStateFileName = "flagStates.json";
 var flagStatesJSONArray;
