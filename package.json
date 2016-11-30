@@ -26,9 +26,7 @@
 
     "underscore": "^1.8.3",
     "bluebird": "^3.4.6",
-    "parse-link-header": "^0.4.1"
-
+    "parse-link-header": "^0.4.1",
     "slash": "^1.0.0",
-    "underscore": "^1.8.3"
   }
 }
