@@ -263,7 +263,7 @@ function getAllFlags() {
                 //console.log(flag);
                 updateFlagState(flagJSON);
 
-                if(flagJSON.isOn ) { createFlagTimeout(flagJSON.key, 10000); }
+                if(flagJSON.isOn ) { createFlagTimeout(flagJSON.key, 70000); }
             });
         }
     });
@@ -348,7 +348,7 @@ function getIP(callback) {
 
 // This function is called upon a flag timeout
 function flagTimedOut(flagKey, msTimeout) {
-    //console.log("Timed out " + flagKey + msTimeout + "ms");
+    console.log("Timed out " + flagKey + " " + msTimeout + "ms");
     slackbotReady.then(function(){
         slackbot.notifyTimedOutFlag(flagKey, msTimeout);
     });
@@ -359,7 +359,9 @@ function flagTimedOut(flagKey, msTimeout) {
 function createFlagTimeout(flagKey, msTimeout) {
     msTimeout = (typeof msTimeout === 'undefined') ? 600000000 : msTimeout;
 
-    var newTimeout = setTimeout(flagTimedOut(flagKey, msTimeout), msTimeout);
+    var newTimeout = setTimeout(function() {
+        flagTimedOut(flagKey, msTimeout);
+    }, msTimeout);
 
     timeoutArray.push({flagkey:newTimeout});
 
