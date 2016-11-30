@@ -4,28 +4,33 @@ var userId = "flaglag";
 var testRepo = "TestCodeFlagBot";
 var cloneTo = "../parser/Repo";
 var exec = require('child_process').exec;
-
+var slash = require('slash');
+var dirname = slash(__dirname); //current directory
 
 module.exports = {
 
 	/* Get - Clone the repository */
-	cloneRepo : function(callback){
-		exec("sh before.sh " + cloneTo, callback);
+	cloneRepo : function(){
+		return new Promise ( function(resolve, reject) { 
+			exec("sh " + dirname + "/before.sh " + cloneTo, function(err) {
+				if(err) {
+					reject();
+				}
+				resolve();
+			});
+		});
 	},
 
 	/* Push changes */
-	pushChanges : function(callback) {	
-		exec("sh after.sh " + cloneTo, callback);
+	pushChanges : function() {	
+		return new Promise ( function(resolve, reject) { 
+			exec("sh " + dirname + "/after.sh " + cloneTo, function(err) {
+				if(err) {
+					reject();
+				}
+				resolve();
+			});
+		});
 	}
 
 }
-
-/****** Testing *******/
-module.exports.cloneRepo(function(err) {
-	console.log(err);
-	console.log("repo cloned");
-});
-
-module.exports.pushChanges(function() {
-	console.log("repo pushed");
-});
