@@ -10,7 +10,7 @@ var botName = "flaglagbot";
 
 var fs = require("fs");
 var config = JSON.parse(fs.readFileSync("../config.JSON", 'utf8'));
-var TOKEN = config.ldToken;
+var TOKEN = config.slackToken;
 
 //TESTING!
 /**************************************************************************/ 
@@ -53,7 +53,6 @@ var readyPromise = new Promise(function(resolve, reject){
     console.log("promising...");
     controller.spawn({
       token: TOKEN,
-      name: botName
     }).startRTM(function(err) {
         if(err) {
             reject(err);
