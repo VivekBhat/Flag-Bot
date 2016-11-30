@@ -98,10 +98,13 @@
       clone: yes
      register: git_cloned
 
-   - name: Install npm packages 
-     npm:
-      path: "{{home_dir}}/{{app_dir}}"
-     
+   - name: "Install NPM Packages"
+     npm: path={{home_dir}}/{{app_dir}} state=latest
+    
+   - name: "Run app: forever start main.js"
+     command: forever start {{home_dir}}/{{app_dir}}/main.js
+    when: "forever_list.stdout.find('{{home_dir}}/{{app_dir}}/main.js') == -1"
+
      
 - name: Tasks 
   hosts: ec2_host
