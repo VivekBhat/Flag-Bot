@@ -19,10 +19,21 @@ Here are your options. To see them again, type 'help'.
 
 #### Test Case 1 - Launch Darkly Delete Flag Alert
 Related to: [Issue #1](../../issues/1) | [Issue #7](../../issues/7) | [Issue #8](../../issues/8)
-*Note: *
+
+STEPS
+
+1. Precondition: A flag is deleted on the LaunchDarkly Dashboard and the server is receiving webhooks from it.
+2. Follow presteps[1-4]
+3. User receives an alert message on the channel saying: **A `<flag-key>' has been deleted. What would like to do - integrate or discard feature?
+4. User types: **integrate feature '<flag-key>'** where the flag-key is mentioned in previous step
+5. The bot replies with a success message if the feature existed in the code and was successfully integrated. **Success! Your feature was integreted into your code**. If not found, it responds with a error message 
+
+
+*Note: Can modify this test case to cover use case 8, by just changing the keyword to discard in step 4*
 
 #### Test Case 2 - List Feature Flag
 Related to: [Issue #2](../../issues/2)
+
 STEPS
 
 1. Follow presteps[1-4]
@@ -32,6 +43,7 @@ STEPS
 
 #### Test Case 3 - Create Feature Flag
 Related to: [Issue #3](../../issues/3)
+
 STEPS
 
 1. Follow presteps[1-4]
@@ -42,16 +54,38 @@ STEPS
 #### Test Case 4 - Notification??
 Related to: [Issue #4](../../issues/4)
 
+STEPS
+
+1. Precondition: A flag is deleted on the LaunchDarkly Dashboard and the server is receiving webhooks from it.
+2. Follow presteps[1-4]
+3. User receives an alert message on the channel saying: **A `<flag-key>' has been deleted. What would like to do - integrate or discard feature?
+
 #### Test Case 5 - Turn Feature Flag ON/OFF
 Related to: [Issue #5](../../issues/5)
+
 STEPS
 
 1. Follow presteps[1-4]
 2. Follow test case 2, to see a list of valid flag-key to use in the next step
-3. User types:  **@flaglagbot turn off flag `<flag-key>`**, where flag-key is the name of the flags on Launch Darkly Dashboard
+3. User types: **@flaglagbot turn off flag `<flag-key>`**, where flag-key is the name of the flags on Launch Darkly Dashboard
 4. The bot with success message: ** Success! Your feature flag was turned off.**
 
 *Note: Can change the keyword to ON to try to turn a feature on*
 
 #### Test Case 6 - Delete Feature Flag
-Related to: [Issue #6](../../issues/6)
+Related to: [Issue #6](../../issues/6) | indirectly triggers Test Case 1
+
+STEPS
+
+1. Follow presteps[1-4]
+2. Follow test case 2, to see a list of valid flag-key to use in the next step
+3. User types: **@flaglagbot delete flag `<flag-key>`**, where flag-key is the name of the flags on Launch Darkly Dashboard
+4. The bot with success message: ** Your flag `<flag-key>` was deleted!**
+
+### Exploratory Testing and Code Inspection
+We have set testing to false, so no mock data is used. Our implemented functionality in the above test cases is tested on real data. 
+
+We have handled major error flows in the above use cases. For example some of them include:
+* If user uses a wrong syntax (missing keyword) of the command, the user is presented with the options available again.
+* If user flag-key is not present, then an appropriate message is shown in Test Case 6 - Delete flag, Turn on/off.
+
