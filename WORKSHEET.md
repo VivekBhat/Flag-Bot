@@ -23,8 +23,8 @@
 
 | Deliverable /Tasks  | Item/Status   |  Issues
 | ------------- | ------------  |  ------------
-| Use Case 5 | Completed  | [Issue #5](../../issues/5)
-| Use Case 6 | Completed  | [Issue #6](../../issues/6)
+| **Use Case 5 Implementation** | Completed  | [Issue #5](../../issues/5)
+| **Use Case 6 Implementation** | Completed  | [Issue #6](../../issues/6)
 | Use Case 1 Task <ul> <li> Log relevant server POST messages related to delete flag</li></ul>| Complete| [Issue #1](../../issues/1), [Issue #6](../../issues/6)
 | Use Case 4  Task <ul><li>Set timer </li> | Completed | [Issue #4](../../issues/4)
 | Continue to work on Parser Code| In Progress | [Issue #11](../../issues/11) <ul><li> Dependencies <ul>  <li> [Issue #4](../../issues/4)</li> <li> [Issue #7](../../issues/7)</li> <li> [Issue #8](../../issues/8) </li> </ul> </li></ul>
@@ -44,7 +44,7 @@
 
 | Deliverable   | Item/Status   |  Issues/Tasks
 | ------------- | ------------  |  ------------
-| Use Case 7 & 8 Implementation - Integrate and Discard Features | Completed | [Issue #7](../../issues/7), [Issue #8](../../issues/8)
+| **Use Case 7 & 8 Implementation - Integrate and Discard Features** | Completed | [Issue #7](../../issues/7), [Issue #8](../../issues/8)
 | Keep working on Parser Code | In Progress | [Issue #11](../../issues/11) 
 | Implement git REST calls to push parser code changes | Completed | [Issue #12](../../issues/12)
 | Implement Ansible Playbook | Completed | Deploy Milestone Requirement
