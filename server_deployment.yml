@@ -11,19 +11,27 @@
       name: webserver
       description: an EC2 webserver group
       region: us-east-1
-      aws_access_key: {access_key}
-      aws_secret_key: {secret_key}
+      aws_access_key: AKIAITSZSL57S64MZSLQ
+      aws_secret_key: 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
       state: present
       rules:
         - proto: tcp
           from_port: 80
           to_port: 80
-          cidr_ip: 0.0.0.0/0  
+          cidr_ip: 0.0.0.0/0
+        - proto: tcp
+          from_port: 22
+          to_port: 22
+          cidr_ip: 0.0.0.0/0
+      rules_egress:
+        - proto: all
+          cidr_ip: 0.0.0.0/0
 
-    - name: Create ec2 instance
+
+  - name: Create ec2 instance
     ec2: 
-     aws_access_key: {access_key}
-     aws_secret_key: {secret_key}
+     aws_access_key: AKIAITSZSL57S64MZSLQ
+     aws_secret_key: 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
      key_name: featureBot
      instance_type: t2.micro
      region: us-east-1
@@ -42,20 +50,23 @@
   - name: Add host to in-memory inventory
     add_host:
      hostname: "{{ec2_instances.instances[0].public_ip}}"
-     groupname: ec2_instance
+     groupname: ec2_host
      ansible_ssh_user: ubuntu
      ansible_ssh_private_key_file: ./featureBot.pem
 
-  - name: Wait for port 22
+  - name: Wait for SSH
     wait_for: 
      host: "{{ec2_instances.instances[0].public_ip}}"
-     port: 22 
+     port: 22
+     delay: 60
      state: started
 
 
 - name: Setup
-  hosts: ec2_instance
+  hosts: ec2_host
   sudo: yes
+  gather_facts: True
+  user: root
   
   vars:
    - home_dir: /home/ubuntu
@@ -63,13 +74,20 @@
    - temp_dir: /tmp/
 
   tasks:
+  
+   - name: Hello
+     shell: echo Hello!
+  
+  
    - name: Install Packages 
-     apt: name={{ item }} update_cache=yes state=latest
+     apt: name={{ item }} update_cache=yes  
      with_items:
-       - build-essential
+       #- nodejs-legacy
+       #- npm
        - git
+     #shell: apt-get install nodejs && apt-get install npm && apt-get install git
 
-   - name: Install npm
+   - name: Install Node
      shell: curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash - && apt-get install -y nodejs
 
 
@@ -86,7 +104,7 @@
      
      
 - name: Tasks 
-  hosts: ec2_instance
+  hosts: ec2_host
   sudo: yes
 
   vars:
@@ -99,4 +117,4 @@
      command: node "{{home_dir}}/{{app_dir}}/server/server.js" 40676
 
    - name: Print All EC2 variables
-     debug: var=ec2_instance
+     debug: var=ec2_host
