@@ -265,12 +265,12 @@ function notify(msg) {
 }
 
 function notifyDeletedFlag(flagKey) {
-    notify("The flag " + flagKey + "has been deleted. Type 'integrate feature <flag-key>'" + 
+    notify("The flag " + flagKey + " has been deleted. Type 'integrate feature <flag-key>'" + 
         "to integrate feature, or 'discard feature <flag-key> to remove feature from code");
 }
 
 function notifyTimedOutFlag(flagKey, msTimeout) {
-    notify("The flag " + flagKey + "has been activated for " + msTimeout + "ms what would you like to do?");
+    notify("The flag " + flagKey + " has been activated for " + msTimeout + "ms what would you like to do?");
 }
 
 /***************** Exports *******************/
