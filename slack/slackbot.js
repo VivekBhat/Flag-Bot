@@ -1,47 +1,13 @@
 var _ = require('underscore');
 var LDAccess = require("../common/launchDarkly");
-var FileFinder = require("../parser/filefinder");
+var FileFinder = require("../parser/parser.js");
 var Botkit = require('botkit');
 var request = require('request');
 
-var TOKEN = 'xoxb-92608187490-QQjz4ew9SYvBuNVjT0lQ6MAE';
+var TOKEN = 'xoxb-92608187490-C9qLMvPIwOltHpE6UCSKj9pX';
 var notificationChannels = ["featureflags", "demo"];
 var sendAsUser = false;
 var botName = "flaglagbot";
-
-var buttonMsg = 
-    {
-    "attachments": [
-        {  
-            "text": "Choose an option: ",
-            "fallback": "You are unable to choose a game",
-            "callback_id": "wopr_game",
-            "color": "#3AA3E3",
-            "attachment_type": "default",
-            "actions": [
-                {
-                    "name": "chess",
-                    "text": "Integrate Feature",
-                    "type": "button",
-                    "value": "chess"
-                },
-                {
-                    "name": "war",
-                    "text": "Discard feature",
-                    "style": "danger",
-                    "type": "button",
-                    "value": "war",
-                    "confirm": {
-                        "title": "Are you sure?",
-                        "text": "Wouldn't you prefer something else?",  //extra messages
-                        "ok_text": "Yes",
-                        "dismiss_text": "No"
-                    }
-                }
-            ]
-        }
-    ]
-}
 
 //TESTING!
 /**************************************************************************/ 
