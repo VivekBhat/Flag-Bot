@@ -1,4 +1,4 @@
-### Deployment Scripts [25%]
+## Deployment Scripts [25%]
 
 1. Establish connection to EC2 - Identity and access management (IAM)
    1. Access key ID & secret access key from IAM ( provides admin privileges for AWS instances)
@@ -13,7 +13,7 @@ Files created
 * `provision.yml`
 
 
-###Acceptance Testing [40%]
+##Acceptance Testing [40%]
 ####PRESTEPS
 
 1. User is logged in to the correct team domain: **csc510-slackbot**
@@ -31,8 +31,7 @@ To discard a feature in your code, type 'discard feature <flag-key>'.
 Here are your options. To see them again, type 'help'.
 ~~~~
 
-
-#### Test Case 1 - Launch Darkly Delete Flag Alert
+### Test Case 1 - Launch Darkly Delete Flag Alert
 Related to: [Issue #1](../../issues/1) | [Issue #7](../../issues/7) | [Issue #8](../../issues/8)
 
 STEPS
@@ -46,7 +45,7 @@ STEPS
 
 *Note: Can modify this test case to cover use case 8, by just changing the keyword to discard in step 4*
 
-#### Test Case 2 - List Feature Flag
+### Test Case 2 - List Feature Flag
 Related to: [Issue #2](../../issues/2)
 
 STEPS
@@ -56,7 +55,7 @@ STEPS
 3. The bot responds with a list of flags that are currently on LaunchDarkly Dashboard: **Your feature flags:** followed by one flagkey per line. If there aren’t any flags, the bot responds with **No flags were found.**
 
 
-#### Test Case 3 - Create Feature Flag
+### Test Case 3 - Create Feature Flag
 Related to: [Issue #3](../../issues/3)
 
 STEPS
@@ -66,16 +65,18 @@ STEPS
 3. User types:  **@flaglagbot create flag `<flag-key>`**, where flag-key is the name of the flags on Launch Darkly Dashboard
 3. The bot with success message: **Your flag `<flag-key>` was created!**
 
-#### Test Case 4 - Notification??
+### Test Case 4 - Notification about feature flag turned on for long
 Related to: [Issue #4](../../issues/4)
 
 STEPS
 
-1. Precondition: A flag is deleted on the LaunchDarkly Dashboard and the server is receiving webhooks from it.
+1. Precondition: A flag has been turned on in the code for a long time without being turned off, deleted or modified. The server is keeping track of any webhooks related to it.
 2. Follow presteps[1-4]
-3. User receives an alert message on the channel saying: **A `<flag-key>` has been deleted. What would like to do - integrate or discard feature?**
+3. User receives an alert message on the channel saying: **The flag `<flag-key>` been activated for 100000ms what would you like to do?**
 
-#### Test Case 5 - Turn Feature Flag ON/OFF
+*Note: In order to test this case, a flag has to be turned on LaunchDarkly and the server has been keeping track of it*
+
+### Test Case 5 - Turn Feature Flag ON/OFF
 Related to: [Issue #5](../../issues/5)
 
 STEPS
@@ -87,7 +88,7 @@ STEPS
 
 *Note: Can change the keyword to ON to try to turn a feature on*
 
-#### Test Case 6 - Delete Feature Flag
+### Test Case 6 - Delete Feature Flag
 Related to: [Issue #6](../../issues/6) | indirectly triggers Test Case 1
 
 STEPS
@@ -97,7 +98,7 @@ STEPS
 3. User types: **@flaglagbot delete flag `<flag-key>`**, where flag-key is the name of the flags on Launch Darkly Dashboard
 4. The bot with success message: ** Your flag `<flag-key>` was deleted!**
 
-### Exploratory Testing and Code Inspection [25%]
+## Exploratory Testing and Code Inspection [25%]
 We have set testing to false, so no mock data is used. Our implemented functionality in the above test cases is tested on real data. 
 
 We have handled major error flows in the above use cases. For example some of them include:
