@@ -37,8 +37,8 @@
 | Use Case 7 & 8 Task - `FileFinder.js` <ul><li> Identify all .js files and paths</li> <li> Call on parser.js on these files </li></ul>| Completed | [Issue #7](../../issues/7), [Issue #8](../../issues/8)
 | Keep working on Parser Code| In Progress | [Issue #11](../../issues/11) <ul><li> Dependencies <ul>  <li> [Issue #4](../../issues/4)</li> <li> [Issue #7](../../issues/7)</li> <li> [Issue #8](../../issues/8) </li> </ul> </li></ul>
 | **Use Case 1 Implementation** | Completed | [Issue #1](../../issues/1)
-| **SERVICE.md**  | Completed | Milestone Sdervice Requirement
-| **Screencast Service Milestone** | Completed | Milestone Service Requirement 
+| **SERVICE.md**  | Completed | Service Milestone Requirement
+| **Screencast Service Milestone** | Completed | Service Milestone Requirement 
 
 ##### Week 5 (Ends 11/29) - Iteration 4 (Deploy Milestone Due) 
 
@@ -50,3 +50,4 @@
 | Implement Ansible Playbook | Completed | Deploy Milestone Requirement
 | Setup EC2 Server  | Completed | Deploy Milestone Requirement
 | Screencast Deploy Milestone | Completed | Deploy Milestone Requirement
+| Acceptance Test Cases / Screencasts for Deploy.md | Compeleted | Deploy Milestone Requirement
