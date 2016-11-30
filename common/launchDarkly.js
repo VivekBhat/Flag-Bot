@@ -1,8 +1,11 @@
 var _ = require('underscore');
 var request = require("request");
-var LDAuth = "api-094a8936-af14-4ac3-82ce-51e9f2a6e42f";
 var baseURL = "https://app.launchdarkly.com/api/v2";
 var flagURL = baseURL + '/flags/default';
+
+var fs = require("fs");
+var config = JSON.parse(fs.readFileSync("../config.JSON", 'utf8'));
+var LDAuth = config.ldToken;
 
 module.exports = {
 
