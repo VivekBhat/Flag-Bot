@@ -265,7 +265,8 @@ function notify(msg) {
             url: 'https://slack.com/api/chat.postMessage' + 
                 '?token=' + TOKEN +
                 '&channel=' + notificationChannels[cha] + 
-                '&text=' + msg,
+                '&text=' + msg +
+                '&username=' + botName,
             method: 'GET',
             headers: {
             "content-type": "application/json"
