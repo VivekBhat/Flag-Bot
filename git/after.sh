@@ -9,10 +9,6 @@ git config user.password "1flaglagbot"
 
 git fetch --all
 
-echo "git checkout branch"
-
-git checkout branch
-
 echo " "
 
 echo " ======== COPY DONE ========"
@@ -27,7 +23,7 @@ echo " ======== COMMIT DONE ========"
 
 echo " "
 echo "git push origin master"
-git push origin branch
+git push origin master
 
 echo " ======== PUSH DONE ========"
 

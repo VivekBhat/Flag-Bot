@@ -34,7 +34,7 @@ module.exports = {
 
 				// executes `find for all .js files`
 				console.log(mypath);
-				execSync("find " + gitRepo + " -type f -name '*.js' > '" + mypath + "/output.txt'"); 
+				execSync("find " + gitRepo + " -type f -name '*.js' > " + mypath + "/output.txt"); 
 
 				lrs = new LineReaderSync(mypath + "/output.txt");
 				var files = lrs.toLines();
@@ -60,7 +60,7 @@ module.exports = {
 						parseCode(file, featureKey, discardFeature);
 					}
 				}
-				console.log("Changes made: " + changesMade);
+
 				if(changesMade) {
 					gitFunctions.pushChanges().then(function() {
 						console.log("Pushed changes!");
@@ -70,10 +70,8 @@ module.exports = {
 						reject("Failed to push changes.");
 					});
 				} else {
-					console.log("should be rejected.");
-					reject("No feature flag code was found for flag: " + flagKey);
+					reject("No feature flag code was found for key: " + featureKey + ".");
 				}
-				reject("Something went wrong.");
 						
 			});
 		});
@@ -130,11 +128,13 @@ function parseCode(filePath, featureKey, discardFeature) {
 }
 
 function saveFile(filePath) {
-	console.log("saving file: " + filePath);
-	var savename = filePath.replace(/(\.[\w\d_-]+)$/i, 'modified$1');
-	var wstream = fs.createWriteStream(savename);
-	wstream.write(escodegen.generate(this.AST));
-	wstream.end();
+	if(changesMade) {
+		console.log("saving file: " + filePath);
+		var savename = filePath.replace(/(\.[\w\d_-]+)$/i, 'modified$1');
+		var wstream = fs.createWriteStream(savename);
+		wstream.write(escodegen.generate(this.AST));
+		wstream.end();
+	}
 }
 
 function getLibraryVarName() {
@@ -232,6 +232,7 @@ function isVariationNode(node) {
 }
 
 function removeFlagCode(variationNode, discardFeature) {
+	changesMade = true;
 	if(!discardFeature) {
 		variationNode.replaceWithNewFeature(this.AST);
 	} else {
@@ -241,6 +242,7 @@ function removeFlagCode(variationNode, discardFeature) {
 
 //Deletes extra LD code like library call and client variable
 function deleteLDCode() {
+	changesMade = true;
 	var that = this;
 	estraverse.traverse(this.AST, {
 		enter: function (innerNode) {
@@ -258,6 +260,7 @@ function deleteLDCode() {
 function OnceNode(node) {	
 
 	node.delete = function() {
+		changesMade = true;
 		estraverse.replace(this.AST, {
 			enter: function (innerNode) {
 				if(_.isEqual(node,innerNode)){
@@ -375,6 +378,7 @@ function VariationNode(node) {
 	}
 
 	node.replace = function(ast, keepFeature){
+		changesMade = true;
 		//Add code from within
 		estraverse.replace(ast, {
 			enter: function (innerNode) {

@@ -208,18 +208,19 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
                         return;
                     }
                     var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, false);
-                    flagDeletedPromise.then( function(val) {
-                        LDAccess.deleteFlag(argument, function(successful) {
-                            if(successful) {
-                               bot.reply(data, {text: "Success! Your feature was integrated into your code."}); 
-                           } else {
-                                bot.reply(data, {text: "There was a problem integrating your feature was integrated into your code."});
-                           }
-                            
-                        });
-                    },function(err) {
-                        bot.reply(data, {text:err});
-                    }); 
+                    flagDeletedPromise.then( 
+                        function(val) {
+                            LDAccess.deleteFlag(argument, function(successful) {
+                                bot.reply(data, {text: "Success! Your feature was integrated into your code."});
+                            });
+                        }
+                    )
+                    .catch( 
+                        function(err) {
+                            console.log(err);
+                            bot.reply(data, {text: err});
+                        }
+                    );
                 });
                 break;
 
@@ -230,14 +231,19 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
                         return;
                     }
                     var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, true);
-                    flagDeletedPromise.then( function(val) {
-                        LDAccess.deleteFlag(argument, function(successful) {
-                            bot.reply(data, {text: "Success! Your feature was discarded from your code."});
-                        });
-                    })
-                    .catch( function(err) {
-                        bot.reply(data, {text: err});
-                    });
+                    flagDeletedPromise.then( 
+                        function(val) {
+                            LDAccess.deleteFlag(argument, function(successful) {
+                                bot.reply(data, {text: "Success! Your feature was discarded from your code."});
+                            });
+                        }
+                    )
+                    .catch( 
+                        function(err) {
+                            console.log(err);
+                            bot.reply(data, {text: err});
+                        }
+                    );
                 });
                 break;
 
