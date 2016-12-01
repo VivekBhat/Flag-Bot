@@ -16,6 +16,8 @@ var mypath = slash(__dirname); //current directory
 var gitRepo = mypath + "/" + "Repo"; //directory of git repo
 var dirsToExclude = ["node_modules"];
 
+var changesMade = false;
+
 /** Assumptions **/
 //  * Library and client variables are in every file
 //  * LD Code is inside client.once and client.variation.
@@ -31,7 +33,8 @@ module.exports = {
 			gitFunctions.cloneRepo().then(function() {
 
 				// executes `find for all .js files`
-				execSync("find " + gitRepo + " -type f -name '*.js' > " + mypath + "/output.txt"); 
+				console.log(mypath);
+				execSync("find " + gitRepo + " -type f -name '*.js' > '" + mypath + "/output.txt'"); 
 
 				lrs = new LineReaderSync(mypath + "/output.txt");
 				var files = lrs.toLines();
@@ -42,7 +45,6 @@ module.exports = {
 
 				for(var f in files) {
 					var file = files[f];
-					console.log("File: " + file);
 					// Leave out files if should be left out (eg library files)
 					var excluded = false;
 					for(var d in dirsToExclude) {
@@ -55,17 +57,23 @@ module.exports = {
 					}
 					// Parse code
 					if(!excluded) {
-						console.log("Should be parsing: " + file);
 						parseCode(file, featureKey, discardFeature);
 					}
 				}
-
-				gitFunctions.pushChanges().then(function() {
-					console.log("Pushed changes!");
-					resolve();
-				}).catch(function() {
-					reject("Failed to clone repo: " + err);
-				});
+				console.log("Changes made: " + changesMade);
+				if(changesMade) {
+					gitFunctions.pushChanges().then(function() {
+						console.log("Pushed changes!");
+						changesMade = false; //reset for next time;
+						resolve();
+					}).catch(function() {
+						reject("Failed to push changes.");
+					});
+				} else {
+					console.log("should be rejected.");
+					reject("No feature flag code was found for flag: " + flagKey);
+				}
+				reject("Something went wrong.");
 						
 			});
 		});
@@ -91,6 +99,7 @@ function parseCode(filePath, featureKey, discardFeature) {
 
 		// Return if either var name is null
 		if (!this.libraryVarName || !this.clientVarName) {
+			console.log(filePath);
 			console.log("LD variable not found. Will not parse.");
 			return;
 		}

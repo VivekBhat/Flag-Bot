@@ -210,12 +210,16 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
                     var flagDeletedPromise = FileFinder.deleteFeatureFlag(argument, false);
                     flagDeletedPromise.then( function(val) {
                         LDAccess.deleteFlag(argument, function(successful) {
-                            bot.reply(data, {text: "Success! Your feature was integrated into your code."});
+                            if(successful) {
+                               bot.reply(data, {text: "Success! Your feature was integrated into your code."}); 
+                           } else {
+                                bot.reply(data, {text: "There was a problem integrating your feature was integrated into your code."});
+                           }
+                            
                         });
-                    })
-                    .catch( function(err) {
-                        bot.reply(data, {text:"Sorry, there was a problem integrating your feature."});
-                    }) 
+                    },function(err) {
+                        bot.reply(data, {text:err});
+                    }); 
                 });
                 break;
 
@@ -232,7 +236,7 @@ controller.on(['direct_message','direct_mention','mention'], function(bot, data)
                         });
                     })
                     .catch( function(err) {
-                        bot.reply(data, {text: "Sorry, there was a problem discarding your feature."});
+                        bot.reply(data, {text: err});
                     });
                 });
                 break;
