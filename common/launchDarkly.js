@@ -4,7 +4,7 @@ var baseURL = "https://app.launchdarkly.com/api/v2";
 var flagURL = baseURL + '/flags/default';
 
 var fs = require("fs");
-var config = JSON.parse(fs.readFileSync("../config.JSON", 'utf8'));
+var config = JSON.parse(fs.readFileSync("../config.json", 'utf8'));
 var LDAuth = config.ldToken;
 
 module.exports = {
