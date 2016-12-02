@@ -117,8 +117,8 @@ Please see [WORKSHEET.md](https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/
 
 #### Screencast (5%)
 **Introduction Screencast - Preview**
-![Introduction Screencast for overview] (https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/screencast.gif)
+![Introduction Screencast for overview] (https://github.com/VivekBhat/Flag-Bot/blob/master/screencast.gif)
 
 
 **Screencast - remaining commands**
-![Other Nock Listeners for rest of the commands] (https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/screencast2.gif)
+![Other Nock Listeners for rest of the commands] (https://github.com/VivekBhat/Flag-Bot/blob/master/screencast2.gif)
