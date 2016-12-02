@@ -112,8 +112,6 @@ We have handled major error flows in the above use cases. For example some of th
 
 Please see [WORKSHEET.md](https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/WORKSHEET.md) for task tracking information.
 
-**UC1, UC2 and UC3 Screencast**
-![ Screencast for the 3 use cases] (https://github.ncsu.edu/kebrey/FlagLagBot/blob/master/deploy_screencast.gif)
-
+*Note:Removed the link that was not working. Our screencast for this milestone is linked below:*
 
 [Service Deployment](https://www.youtube.com/watch?v=7K9fXtlD2F4&feature=youtu.be)
