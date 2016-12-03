@@ -8,9 +8,9 @@ var notificationChannels = ["featureflags"];
 var sendAsUser = false;
 var botName = "flaglagbot";
 
-var fs = require("fs");
-var config = JSON.parse(fs.readFileSync("../config.JSON", 'utf8'));
-var TOKEN = config.slackToken;
+var tokenLoader = require('../tokenLoader');
+const TOKEN = tokenLoader.getToken();
+
 
 //TESTING!
 /**************************************************************************/ 

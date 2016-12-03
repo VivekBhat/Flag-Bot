@@ -16,10 +16,11 @@ var http = require('http');
 var fs = require('fs');
 var request = require('request');
 
-// removed until import error repaired
 var slackbot = require('../slack/slackbot');
 var slackbotReady = slackbot.readyPromise;
 
+var tokenLoader = require('../tokenLoader');
+const LDAuth = tokenLoader.getLDAuth();
 
 /*================================================
  * Global Variables/Constants
@@ -28,8 +29,6 @@ var slackbotReady = slackbot.readyPromise;
 
 const PORT=40000; // This is the port # that the server will be listening for request on
 const URLROOT = "https://app.launchdarkly.com/api/v2/";
-var config = JSON.parse(fs.readFileSync("../config.JSON", 'utf8'));
-var TOKEN = config.ldToken;
 
 // Refer to important notes when changing these
 const PROJKEY = "default";
@@ -250,24 +249,35 @@ function getAllFlags() {
       method: 'GET',
       headers: {
         "content-type": "application/json",
-        "Authorization": TOKEN
+        "Authorization": LDAuth
       }
     };
+
+    console.log("Server.js : LDAuth = '", LDAuth, '');
 
     // Send a http request to url and specify a callback that will be called upon its return.
     request(options, function (error, response, body) 
     {
-        var flags = JSON.parse(body);
-        for( var i = 0; i < flags.items.length; i++ )
-        {
-            var flagKey = flags.items[i].key;
-            //console.log(flagKey);
-            getFlag(flagKey, function (flagJSON) {
-                //console.log(flag);
-                updateFlagState(flagJSON);
+        if (error) {
+            console.log("Server.js : Get flag error: ", error);
+        } else {
+            if(response.statusCode == 401) {
+                console.log("Server.js : statusMessage = ", response.statusMessage);
+                console.log("Server.js : body = ", body);
+            } else {
+                var flags = JSON.parse(body);
+                for( var i = 0; i < flags.items.length; i++ )
+                {
+                    var flagKey = flags.items[i].key;
+                    //console.log(flagKey);
+                    getFlag(flagKey, function (flagJSON) {
+                        //console.log(flag);
+                        updateFlagState(flagJSON);
 
-                if(flagJSON.isOn ) { createFlagTimeout(flagJSON.key, FLAG_TIMEOUT_MS); }
-            });
+                        if(flagJSON.isOn ) { createFlagTimeout(flagJSON.key, FLAG_TIMEOUT_MS); }
+                    });
+                }
+            }
         }
     });
 }
@@ -279,7 +289,7 @@ function getFlag(flagKey, callback) {
       method: 'GET',
       headers: {
         "content-type": "application/json",
-        "Authorization": TOKEN
+        "Authorization": LDAuth
       }
     };
 
@@ -305,7 +315,7 @@ function createWebhook(serverIP) {
       method: 'POST',
       headers: {
         "content-type": "application/json",
-        "Authorization": TOKEN
+        "Authorization": LDAuth
       },
       body: JSON.stringify({
         "url": /*"http://ec2-35-164-239-118.us-west-2.compute.amazonaws.com/",*/ "http://" + serverIP + ":" + PORT,
@@ -318,10 +328,10 @@ function createWebhook(serverIP) {
     request(options, function (error, response, body) 
     {
       if (error) {
-        console.log("Post error: ", error);
+        console.log("Server.js : Webhook post error: ", error);
       } else {
         var obj = JSON.parse(body);
-        console.log("Created the webhook at: ", obj.url);
+        console.log("Server.js : Created the webhook at: ", obj.url);
       }
     });
 }
@@ -336,7 +346,7 @@ function getIP(callback) {
   request(options, function (error, response, body) 
   {
     if (error) {
-      console.log("Get IP error: ", error);
+      console.log("Server.js : get IP error: ", error);
     } else {
       var obj = JSON.parse(body);
       console.log("IP: ", obj.ip);
